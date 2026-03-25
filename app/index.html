@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Water Sampler" />
+  <title>Water Sampler</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & tokens ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0a1628;
+      --surface:     #0f2040;
+      --surface2:    #162a50;
+      --border:      rgba(0,201,177,.18);
+      --accent:      #00c9b1;
+      --accent2:     #005fa3;
+      --text:        #e8f0fe;
+      --text-muted:  #8898b8;
+      --water:       #00c9b1;
+      --air:         #f6a840;
+      --success:     #22d96a;
+      --radius:      18px;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bot:    env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      min-height: 100dvh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* animated gradient backdrop */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0,201,177,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(0,95,163,.22) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding:
+        calc(var(--safe-top) + 24px)
+        20px
+        calc(var(--safe-bot) + 24px);
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo {
+      width: 72px; height: 72px;
+      margin: 0 auto 14px;
+      filter: drop-shadow(0 0 18px rgba(0,201,177,.55));
+      animation: float 3.5s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    h1 {
+      font-size: 1.6rem; font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      margin-top: 4px;
+      font-size: .82rem; color: var(--text-muted); font-weight: 400;
+    }
+
+    /* ── Cards ────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+      transition: border-color .25s;
+    }
+    .card-label {
+      font-size: .72rem; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Search ───────────────────────────────────────────────────── */
+    .search-wrap { position: relative; }
+    .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+    }
+    #search {
+      width: 100%; padding: 14px 14px 14px 44px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-size: 1rem; font-family: inherit;
+      outline: none; transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    #search::placeholder { color: var(--text-muted); }
+    #search:focus { border-color: var(--accent); }
+
+    /* ── Station list ─────────────────────────────────────────────── */
+    #station-list {
+      list-style: none;
+      max-height: 52dvh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+      border-radius: 12px;
+      /* subtle scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface2) transparent;
+    }
+    #station-list::-webkit-scrollbar { width: 4px; }
+    #station-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+    .station-item {
+      padding: 14px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      border-radius: 8px;
+      transition: background .15s, transform .1s;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .station-item:last-child { border-bottom: none; }
+    .station-item:active { transform: scale(.98); background: var(--surface2); }
+    .station-item.selected { background: rgba(0,201,177,.12); border-color: var(--accent); }
+    .station-name { font-weight: 600; font-size: .95rem; }
+    .station-meta { font-size: .76rem; color: var(--text-muted); }
+    .station-tag {
+      display: inline-block; font-size: .64rem; font-weight: 600;
+      padding: 2px 7px; border-radius: 20px; margin-left: 6px;
+      vertical-align: middle;
+    }
+    .tag-river { background: rgba(0,163,255,.18); color: #5dd1ff; }
+    .tag-lake  { background: rgba(0,201,177,.18); color: var(--accent); }
+
+    .empty-msg {
+      text-align: center; color: var(--text-muted);
+      padding: 24px 0; font-size: .9rem;
+    }
+
+    /* ── CTA button ───────────────────────────────────────────────── */
+    #take-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(135deg, #00c9b1, #0087e0);
+      border: none; border-radius: var(--radius);
+      color: #fff; font-size: 1.1rem; font-weight: 700;
+      letter-spacing: .02em; cursor: pointer;
+      box-shadow: 0 4px 22px rgba(0,201,177,.35);
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #take-btn:disabled {
+      opacity: .45; cursor: not-allowed; box-shadow: none;
+    }
+    #take-btn:not(:disabled):active {
+      transform: scale(.97); box-shadow: 0 2px 10px rgba(0,201,177,.2);
+    }
+    .btn-icon { font-size: 1.3rem; }
+
+    /* ── Spinner ──────────────────────────────────────────────────── */
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result card ──────────────────────────────────────────────── */
+    #result { display: none; }
+    #result.visible { display: block; }
+
+    .result-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .metric {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .metric-label { font-size: .7rem; color: var(--text-muted); font-weight: 500; }
+    .metric-value {
+      font-size: 1.9rem; font-weight: 700; line-height: 1.1;
+      margin-top: 4px;
+    }
+    .metric-unit  { font-size: .9rem; font-weight: 400; }
+    .metric-sub   { font-size: .65rem; color: var(--text-muted); margin-top: 4px; }
+    .water-color  { color: var(--water); }
+    .air-color    { color: var(--air); }
+
+    .result-detail { margin-top: 12px; font-size: .8rem; color: var(--text-muted); line-height: 1.6; }
+    .result-detail span { color: var(--text); font-weight: 500; }
+
+    /* ── Save button ──────────────────────────────────────────────── */
+    #save-btn {
+      width: 100%; padding: 15px;
+      background: rgba(34,217,106,.12);
+      border: 1.5px solid rgba(34,217,106,.4);
+      border-radius: var(--radius);
+      color: var(--success); font-size: 1rem; font-weight: 600;
+      cursor: pointer; margin-top: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #save-btn:active { background: rgba(34,217,106,.22); }
+
+    /* ── Toast ─────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: calc(var(--safe-bot) + 24px); left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 40px; padding: 12px 24px;
+      font-size: .88rem; font-weight: 500;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0; pointer-events: none; white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Status ─────────────────────────────────────────────────────── */
+    #status-bar {
+      text-align: center; font-size: .8rem; color: var(--text-muted);
+      min-height: 1.4em; margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <img class="logo" src="icon-512.png" alt="Water drop" />
+    <h1>Water Sampler</h1>
+    <p class="subtitle">Swiss hydrology · BAFU/FOEN & MeteoSwiss</p>
+  </header>
+
+  <!-- Station picker -->
+  <div class="card" id="picker-card">
+    <div class="card-label">📍 Choose station</div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input id="search" type="search" placeholder="Search river, lake, or town…" autocomplete="off" />
+    </div>
+    <ul id="station-list"><li class="empty-msg">Loading stations…</li></ul>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar"></div>
+
+  <!-- Take Sample button -->
+  <button id="take-btn" disabled>
+    <span class="btn-icon">💧</span>
+    <span id="btn-label">Take Sample</span>
+  </button>
+
+  <!-- Result -->
+  <div class="card" id="result">
+    <div class="card-label">📊 Latest reading</div>
+
+    <div class="result-grid">
+      <div class="metric">
+        <div class="metric-label">🌊 Water Temp</div>
+        <div class="metric-value water-color">
+          <span id="r-water">–</span>
+          <span class="metric-unit">°C</span>
+        </div>
+        <div class="metric-sub" id="r-water-time"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">🌡 Air Temp (SMN)</div>
+        <div class="metric-value air-color">
+          <span id="r-air">–</span>
+          <span class="metric-unit">°C</span>
+        </div>
+        <div class="metric-sub" id="r-air-station"></div>
+      </div>
+    </div>
+
+    <div class="result-detail" id="r-detail"></div>
+
+    <button id="save-btn">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M12 16V4m0 12-4-4m4 4 4-4M4 20h16"/>
+      </svg>
+      Save as .txt file
+    </button>
+  </div>
+
+</div><!-- .app -->
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// Config
+// ─────────────────────────────────────────────────────────────
+const HYDRO_BASE = 'https://api.existenz.ch/apiv1/hydro';
+const SMN_BASE   = 'https://api.existenz.ch/apiv1/smn';
+
+// ─────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────
+let allStations   = [];   // [{id, name, water_body, body_type, lat, lon}]
+let smnLocations  = {};   // id → {name, canton, lat, lon}
+let selected      = null; // chosen station object
+let lastResult    = null; // data for save
+
+// ─────────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function setStatus(msg) { $('status-bar').textContent = msg; }
+
+function showToast(msg, ms = 2800) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function formatTs(ts) {
+  return new Date(ts * 1000).toLocaleString('de-CH', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function sanitize(s) { return s.replace(/[<>:"/\\|?* ]/g, '_'); }
+
+// ─────────────────────────────────────────────────────────────
+// API calls
+// ─────────────────────────────────────────────────────────────
+async function apiFetch(url, params = {}) {
+  const u = new URL(url);
+  Object.entries(params).forEach(([k,v]) => u.searchParams.set(k,v));
+  const r = await fetch(u, { headers: { Accept: 'application/json' } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function loadStations() {
+  const [locData, tempData] = await Promise.all([
+    apiFetch(`${HYDRO_BASE}/locations`),
+    apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' })
+  ]);
+  const locs = locData.payload;
+  const temps = {};
+  for (const e of tempData.payload) {
+    if (e.par === 'temperature') temps[e.loc] = { value: e.val, timestamp: e.timestamp };
+  }
+  const stations = [];
+  for (const [id, temp] of Object.entries(temps)) {
+    const d = locs[id]?.details;
+    if (!d || !d.lat || !d.lon) continue;
+    stations.push({
+      id, name: d.name || id,
+      water_body: d['water-body-name'] || '',
+      body_type:  d['water-body-type'] || '',
+      lat: d.lat, lon: d.lon,
+      value: temp.value, timestamp: temp.timestamp
+    });
+  }
+  stations.sort((a,b) => a.name.localeCompare(b.name));
+  return stations;
+}
+
+async function loadSmnLocations() {
+  const data = await apiFetch(`${SMN_BASE}/locations`);
+  const result = {};
+  for (const [k, v] of Object.entries(data.payload)) {
+    const d = v.details || {};
+    if (d.lat && d.lon) result[k] = { name: d.name||k, canton: d.canton||'', lat: d.lat, lon: d.lon };
+  }
+  return result;
+}
+
+async function fetchAirTemp(smnId) {
+  const data = await apiFetch(`${SMN_BASE}/latest`, { locations: smnId, parameters: 'tt' });
+  return data.payload.find(e => e.par === 'tt') || null;
+}
+
+function findNearestSmn(lat, lon) {
+  let bestId = null, bestLoc = null, bestDist = Infinity;
+  for (const [id, loc] of Object.entries(smnLocations)) {
+    const d = haversine(lat, lon, loc.lat, loc.lon);
+    if (d < bestDist) { bestDist = d; bestId = id; bestLoc = loc; }
+  }
+  return { id: bestId, loc: bestLoc, dist: bestDist };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Render station list
+// ─────────────────────────────────────────────────────────────
+function renderList(query = '') {
+  const q   = query.toLowerCase().trim();
+  const filtered = q
+    ? allStations.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.water_body.toLowerCase().includes(q))
+    : allStations;
+
+  const ul = $('station-list');
+  ul.innerHTML = '';
+
+  if (!filtered.length) {
+    ul.innerHTML = '<li class="empty-msg">No stations found</li>';
+    return;
+  }
+  for (const s of filtered) {
+    const li = document.createElement('li');
+    li.className = 'station-item' + (selected?.id === s.id ? ' selected' : '');
+    li.dataset.id = s.id;
+    const tag = s.body_type === 'lake'
+      ? `<span class="station-tag tag-lake">lake</span>`
+      : `<span class="station-tag tag-river">river</span>`;
+    li.innerHTML = `
+      <div class="station-name">${s.name}${tag}</div>
+      <div class="station-meta">${s.water_body} · ${s.value.toFixed(1)} °C now</div>`;
+    li.addEventListener('click', () => selectStation(s));
+    ul.appendChild(li);
+  }
+}
+
+function selectStation(s) {
+  selected = s;
+  renderList($('search').value);
+  $('take-btn').disabled = false;
+  setStatus(`Selected: ${s.name}`);
+  // scroll selected into view
+  const el = $('station-list').querySelector('.selected');
+  el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─────────────────────────────────────────────────────────────
+// Take Sample
+// ─────────────────────────────────────────────────────────────
+async function takeSample() {
+  if (!selected) return;
+  const btn = $('take-btn');
+  const label = $('btn-label');
+
+  btn.disabled = true;
+  label.textContent = 'Fetching data…';
+  btn.querySelector('.btn-icon').style.display = 'none';
+  const spinner = document.createElement('div');
+  spinner.className = 'spinner';
+  btn.insertBefore(spinner, label);
+  setStatus('');
+
+  try {
+    // Fetch fresh water temp for this station
+    const tempData = await apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' });
+    const entry = tempData.payload.find(e => e.loc === selected.id && e.par === 'temperature');
+    const waterTemp  = entry ? entry.val : selected.value;
+    const waterTs    = entry ? entry.timestamp : selected.timestamp;
+
+    // Find nearest SMN & air temp
+    const { id: smnId, loc: smnLoc, dist: smnDist } = findNearestSmn(selected.lat, selected.lon);
+    let airTemp = null, airTs = null;
+    if (smnId) {
+      const airEntry = await fetchAirTemp(smnId);
+      if (airEntry) { airTemp = airEntry.val; airTs = airEntry.timestamp; }
+    }
+
+    // Store result
+    lastResult = {
+      station: selected,
+      waterTemp, waterTs,
+      smnId, smnLoc, smnDist,
+      airTemp, airTs,
+      recordedAt: new Date()
+    };
+
+    // Render result
+    $('r-water').textContent = waterTemp.toFixed(2);
+    $('r-water-time').textContent = formatTs(waterTs);
+    $('r-air').textContent = airTemp !== null ? airTemp.toFixed(1) : 'N/A';
+    $('r-air-station').textContent = smnLoc
+      ? `${smnLoc.name} (${smnDist.toFixed(1)} km)`
+      : 'no station';
+
+    $('r-detail').innerHTML = `
+      <b>Station:</b> <span>${selected.name}</span><br>
+      <b>Water body:</b> <span>${selected.water_body} (${selected.body_type})</span><br>
+      <b>Coordinates:</b> <span>${selected.lat}, ${selected.lon}</span>
+    `;
+
+    $('result').classList.add('visible');
+    $('result').scrollIntoView({ behavior: 'smooth' });
+    setStatus('✅ Sample recorded!');
+
+  } catch (err) {
+    console.error(err);
+    setStatus('⚠️ Error: ' + err.message);
+    showToast('Could not fetch data. Check your connection.');
+  } finally {
+    btn.disabled = false;
+    spinner.remove();
+    label.textContent = 'Take Sample';
+    btn.querySelector('.btn-icon').style.display = '';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Save file
+// ─────────────────────────────────────────────────────────────
+function saveFile() {
+  if (!lastResult) return;
+  const {station, waterTemp, waterTs, smnId, smnLoc, smnDist, airTemp, airTs, recordedAt} = lastResult;
+
+  const dateStr  = recordedAt.toISOString().slice(0,10);
+  const timeStr  = recordedAt.toTimeString().slice(0,8).replace(/:/g,'-');
+  const filename = `${dateStr}_${timeStr}_${sanitize(station.name)}.txt`;
+
+  const airLine = airTemp !== null
+    ? `Air Temp (SMN)       : ${airTemp.toFixed(1)} °C\nSMN Station          : ${smnLoc?.name} (${smnId}, ${smnDist.toFixed(1)} km away)\nAir Temp measured at : ${formatTs(airTs)}`
+    : `Air Temperature      : not available`;
+
+  const content = [
+    `Measurement Station  : ${station.name}`,
+    `Water Body           : ${station.water_body} (${station.body_type})`,
+    `Coordinates          : lat ${station.lat}, lon ${station.lon}`,
+    `Measured at (source) : ${formatTs(waterTs)}`,
+    `Saved at (local)     : ${recordedAt.toLocaleString('de-CH')}`,
+    ``,
+    `Water Temperature    : ${waterTemp.toFixed(2)} °C`,
+    ``,
+    airLine,
+    ``,
+    `Hydro source : ${HYDRO_BASE}`,
+    `SMN source   : ${SMN_BASE}`,
+    `Data         : BAFU/FOEN (hydrology) & MeteoSwiss/SwissMetNet (weather)`
+  ].join('\n');
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast(`✅ Saved: ${filename}`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────
+async function init() {
+  setStatus('Loading stations…');
+
+  try {
+    [allStations, smnLocations] = await Promise.all([
+      loadStations(),
+      loadSmnLocations()
+    ]);
+    renderList();
+    setStatus(`${allStations.length} stations loaded. Choose one above.`);
+  } catch (err) {
+    setStatus('⚠️ Failed to load stations. Check connection.');
+    showToast('Network error: ' + err.message, 4000);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Events
+// ─────────────────────────────────────────────────────────────
+$('search').addEventListener('input', e => renderList(e.target.value));
+$('take-btn').addEventListener('click', takeSample);
+$('save-btn').addEventListener('click', saveFile);
+
+// PWA service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(console.warn);
+}
+
+init();
+</script>
+</body>
+</html>

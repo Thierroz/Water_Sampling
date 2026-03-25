@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Output files (collected samples)
+*.txt
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
