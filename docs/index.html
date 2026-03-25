@@ -126,12 +126,11 @@
     /* ── Station list ─────────────────────────────────────────────── */
     #station-list {
       list-style: none;
-      max-height: 52dvh;
+      max-height: 28dvh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       margin-top: 12px;
       border-radius: 12px;
-      /* subtle scrollbar */
       scrollbar-width: thin;
       scrollbar-color: var(--surface2) transparent;
     }
@@ -252,22 +251,21 @@
     }
 
     /* ── Person picker & volume ───────────────────────────────────── */
-    .person-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    .field-select {
+      width: 100%; padding: 13px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-size: 1rem; font-family: inherit;
+      outline: none; cursor: pointer;
+      transition: border-color .2s;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%238898b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
     }
-    .person-btn {
-      padding: 12px 8px;
-      background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 12px; color: var(--text-muted);
-      font-size: .88rem; font-weight: 500; font-family: inherit;
-      cursor: pointer; text-align: center;
-      transition: border-color .2s, color .2s, background .2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .person-btn.active {
-      border-color: var(--accent); color: var(--accent);
-      background: rgba(0,201,177,.1);
-    }
+    .field-select:focus { border-color: var(--accent); }
+    .field-select option { background: #0f2040; }
     .volume-wrap {
       display: flex; align-items: center; gap: 10px; margin-top: 12px;
     }
@@ -316,10 +314,11 @@
   <!-- Person + Volume -->
   <div class="card" id="meta-card">
     <div class="card-label">👤 Sampler &amp; volume</div>
-    <div class="person-grid">
-      <button class="person-btn" id="btn-thierry" data-name="Thierry Robert-Nicoud">Thierry Robert-Nicoud</button>
-      <button class="person-btn" id="btn-marco"   data-name="Marco Fumagalli">Marco Fumagalli</button>
-    </div>
+    <select id="sampler-select" class="field-select">
+      <option value="">— Select sampler —</option>
+      <option value="Thierry Robert-Nicoud">Thierry Robert-Nicoud</option>
+      <option value="Marco Fumagalli">Marco Fumagalli</option>
+    </select>
     <div class="volume-wrap">
       <span class="volume-label">Sample volume</span>
       <input id="volume" type="number" min="1" max="10000" step="1" placeholder="e.g. 500" inputmode="numeric" />
@@ -393,10 +392,7 @@ let lastResult    = null; // data for save
 // Person picker
 // ─────────────────────────────────────────────────────────────
 function selectPerson(name) {
-  samplerName = name;
-  document.querySelectorAll('.person-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.name === name);
-  });
+  samplerName = name || null;
   updateTakeBtn();
 }
 
@@ -730,9 +726,7 @@ async function init() {
 $('search').addEventListener('input', e => renderList(e.target.value));
 $('take-btn').addEventListener('click', takeSample);
 $('save-btn').addEventListener('click', saveFile);
-document.querySelectorAll('.person-btn').forEach(b =>
-  b.addEventListener('click', () => selectPerson(b.dataset.name))
-);
+$('sampler-select').addEventListener('change', e => selectPerson(e.target.value));
 
 // PWA service worker
 if ('serviceWorker' in navigator) {
