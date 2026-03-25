@@ -371,6 +371,18 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 function sanitize(s) { return s.replace(/[<>:"/\\|?* ]/g, '_'); }
 
+// Ask browser for GPS position (resolves even if denied — returns null then)
+function getUserPosition() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, acc: Math.round(pos.coords.accuracy) }),
+      ()  => resolve(null),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // API calls
 // ─────────────────────────────────────────────────────────────
@@ -492,11 +504,22 @@ async function takeSample() {
   setStatus('');
 
   try {
-    // Fetch fresh water temp for this station
-    const tempData = await apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' });
+    // Fetch GPS + water temp + SMN in parallel
+    label.textContent = 'Getting location…';
+    const [userPos, tempData] = await Promise.all([
+      getUserPosition(),
+      apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' })
+    ]);
+
+    label.textContent = 'Fetching data…';
     const entry = tempData.payload.find(e => e.loc === selected.id && e.par === 'temperature');
     const waterTemp  = entry ? entry.val : selected.value;
     const waterTs    = entry ? entry.timestamp : selected.timestamp;
+
+    // Distance from user to station
+    const distToStation = userPos
+      ? haversine(userPos.lat, userPos.lon, selected.lat, selected.lon)
+      : null;
 
     // Find nearest SMN & air temp
     const { id: smnId, loc: smnLoc, dist: smnDist } = findNearestSmn(selected.lat, selected.lon);
@@ -512,6 +535,7 @@ async function takeSample() {
       waterTemp, waterTs,
       smnId, smnLoc, smnDist,
       airTemp, airTs,
+      userPos, distToStation,
       recordedAt: new Date()
     };
 
@@ -523,10 +547,16 @@ async function takeSample() {
       ? `${smnLoc.name} (${smnDist.toFixed(1)} km)`
       : 'no station';
 
+    const userPosLine = userPos
+      ? `<b>Your position:</b> <span>${userPos.lat.toFixed(5)}, ${userPos.lon.toFixed(5)} (±${userPos.acc} m)</span><br>
+         <b>Distance to station:</b> <span>${distToStation.toFixed(2)} km</span>`
+      : `<b>Your position:</b> <span>not available (GPS denied)</span>`;
+
     $('r-detail').innerHTML = `
       <b>Station:</b> <span>${selected.name}</span><br>
       <b>Water body:</b> <span>${selected.water_body} (${selected.body_type})</span><br>
-      <b>Coordinates:</b> <span>${selected.lat}, ${selected.lon}</span>
+      <b>Station coordinates:</b> <span>${selected.lat}, ${selected.lon}</span><br>
+      ${userPosLine}
     `;
 
     $('result').classList.add('visible');
@@ -550,7 +580,8 @@ async function takeSample() {
 // ─────────────────────────────────────────────────────────────
 function saveFile() {
   if (!lastResult) return;
-  const {station, waterTemp, waterTs, smnId, smnLoc, smnDist, airTemp, airTs, recordedAt} = lastResult;
+  const {station, waterTemp, waterTs, smnId, smnLoc, smnDist, airTemp, airTs,
+         userPos, distToStation, recordedAt} = lastResult;
 
   const dateStr  = recordedAt.toISOString().slice(0,10);
   const timeStr  = recordedAt.toTimeString().slice(0,8).replace(/:/g,'-');
@@ -560,16 +591,23 @@ function saveFile() {
     ? `Air Temp (SMN)       : ${airTemp.toFixed(1)} °C\nSMN Station          : ${smnLoc?.name} (${smnId}, ${smnDist.toFixed(1)} km away)\nAir Temp measured at : ${formatTs(airTs)}`
     : `Air Temperature      : not available`;
 
+  const userPosLines = userPos
+    ? [`My Position (GPS)    : lat ${userPos.lat.toFixed(5)}, lon ${userPos.lon.toFixed(5)} (±${userPos.acc} m)`,
+       `Distance to Station  : ${distToStation.toFixed(2)} km`]
+    : [`My Position (GPS)    : not available (permission denied)`];
+
   const content = [
     `Measurement Station  : ${station.name}`,
     `Water Body           : ${station.water_body} (${station.body_type})`,
-    `Coordinates          : lat ${station.lat}, lon ${station.lon}`,
+    `Station Coordinates  : lat ${station.lat}, lon ${station.lon}`,
     `Measured at (source) : ${formatTs(waterTs)}`,
     `Saved at (local)     : ${recordedAt.toLocaleString('de-CH')}`,
     ``,
     `Water Temperature    : ${waterTemp.toFixed(2)} °C`,
     ``,
     airLine,
+    ``,
+    ...userPosLines,
     ``,
     `Hydro source : ${HYDRO_BASE}`,
     `SMN source   : ${SMN_BASE}`,
