@@ -251,6 +251,39 @@
       opacity: 1;
     }
 
+    /* ── Person picker & volume ───────────────────────────────────── */
+    .person-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .person-btn {
+      padding: 12px 8px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 12px; color: var(--text-muted);
+      font-size: .88rem; font-weight: 500; font-family: inherit;
+      cursor: pointer; text-align: center;
+      transition: border-color .2s, color .2s, background .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .person-btn.active {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0,201,177,.1);
+    }
+    .volume-wrap {
+      display: flex; align-items: center; gap: 10px; margin-top: 12px;
+    }
+    .volume-label { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
+    #volume {
+      flex: 1; padding: 12px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-size: 1rem; font-family: inherit;
+      outline: none; transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    #volume::placeholder { color: var(--text-muted); }
+    #volume:focus { border-color: var(--accent); }
+    .volume-unit { font-size: .85rem; color: var(--text-muted); }
+
     /* ── Status ─────────────────────────────────────────────────────── */
     #status-bar {
       text-align: center; font-size: .8rem; color: var(--text-muted);
@@ -278,6 +311,20 @@
       <input id="search" type="search" placeholder="Search river, lake, or town…" autocomplete="off" />
     </div>
     <ul id="station-list"><li class="empty-msg">Loading stations…</li></ul>
+  </div>
+
+  <!-- Person + Volume -->
+  <div class="card" id="meta-card">
+    <div class="card-label">👤 Sampler &amp; volume</div>
+    <div class="person-grid">
+      <button class="person-btn" id="btn-thierry" data-name="Thierry Robert-Nicoud">Thierry Robert-Nicoud</button>
+      <button class="person-btn" id="btn-marco"   data-name="Marco Fumagalli">Marco Fumagalli</button>
+    </div>
+    <div class="volume-wrap">
+      <span class="volume-label">Sample volume</span>
+      <input id="volume" type="number" min="1" max="10000" step="1" placeholder="e.g. 500" inputmode="numeric" />
+      <span class="volume-unit">ml</span>
+    </div>
   </div>
 
   <!-- Status -->
@@ -339,7 +386,23 @@ const SMN_BASE   = 'https://api.existenz.ch/apiv1/smn';
 let allStations   = [];   // [{id, name, water_body, body_type, lat, lon}]
 let smnLocations  = {};   // id → {name, canton, lat, lon}
 let selected      = null; // chosen station object
+let samplerName   = null; // selected person
 let lastResult    = null; // data for save
+
+// ─────────────────────────────────────────────────────────────
+// Person picker
+// ─────────────────────────────────────────────────────────────
+function selectPerson(name) {
+  samplerName = name;
+  document.querySelectorAll('.person-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.name === name);
+  });
+  updateTakeBtn();
+}
+
+function updateTakeBtn() {
+  $('take-btn').disabled = !(selected && samplerName);
+}
 
 // ─────────────────────────────────────────────────────────────
 // Utilities
@@ -480,7 +543,7 @@ function renderList(query = '') {
 function selectStation(s) {
   selected = s;
   renderList($('search').value);
-  $('take-btn').disabled = false;
+  updateTakeBtn();
   setStatus(`Selected: ${s.name}`);
   // scroll selected into view
   const el = $('station-list').querySelector('.selected');
@@ -491,7 +554,17 @@ function selectStation(s) {
 // Take Sample
 // ─────────────────────────────────────────────────────────────
 async function takeSample() {
-  if (!selected) return;
+  if (!selected || !samplerName) return;
+
+  // Validate volume
+  const volumeVal = $('volume').value.trim();
+  const volumeMl  = volumeVal ? parseInt(volumeVal, 10) : null;
+  if (!volumeVal || isNaN(volumeMl) || volumeMl <= 0) {
+    showToast('⚠️ Please enter a sample volume in ml.');
+    $('volume').focus();
+    return;
+  }
+
   const btn = $('take-btn');
   const label = $('btn-label');
 
@@ -532,6 +605,7 @@ async function takeSample() {
     // Store result
     lastResult = {
       station: selected,
+      samplerName, volumeMl,
       waterTemp, waterTs,
       smnId, smnLoc, smnDist,
       airTemp, airTs,
@@ -553,6 +627,8 @@ async function takeSample() {
       : `<b>Your position:</b> <span>not available (GPS denied)</span>`;
 
     $('r-detail').innerHTML = `
+      <b>Sampler:</b> <span>${samplerName}</span><br>
+      <b>Sample volume:</b> <span>${volumeMl} ml</span><br>
       <b>Station:</b> <span>${selected.name}</span><br>
       <b>Water body:</b> <span>${selected.water_body} (${selected.body_type})</span><br>
       <b>Station coordinates:</b> <span>${selected.lat}, ${selected.lon}</span><br>
@@ -580,7 +656,7 @@ async function takeSample() {
 // ─────────────────────────────────────────────────────────────
 function saveFile() {
   if (!lastResult) return;
-  const {station, waterTemp, waterTs, smnId, smnLoc, smnDist, airTemp, airTs,
+  const {station, samplerName, volumeMl, waterTemp, waterTs, smnId, smnLoc, smnDist, airTemp, airTs,
          userPos, distToStation, recordedAt} = lastResult;
 
   const dateStr  = recordedAt.toISOString().slice(0,10);
@@ -597,6 +673,9 @@ function saveFile() {
     : [`My Position (GPS)    : not available (permission denied)`];
 
   const content = [
+    `Sampled by           : ${samplerName}`,
+    `Sample Volume        : ${volumeMl} ml`,
+    ``,
     `Measurement Station  : ${station.name}`,
     `Water Body           : ${station.water_body} (${station.body_type})`,
     `Station Coordinates  : lat ${station.lat}, lon ${station.lon}`,
@@ -651,6 +730,9 @@ async function init() {
 $('search').addEventListener('input', e => renderList(e.target.value));
 $('take-btn').addEventListener('click', takeSample);
 $('save-btn').addEventListener('click', saveFile);
+document.querySelectorAll('.person-btn').forEach(b =>
+  b.addEventListener('click', () => selectPerson(b.dataset.name))
+);
 
 // PWA service worker
 if ('serviceWorker' in navigator) {
