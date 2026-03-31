@@ -157,6 +157,12 @@
     }
     .tag-river { background: rgba(0,163,255,.18); color: #5dd1ff; }
     .tag-lake  { background: rgba(0,201,177,.18); color: var(--accent); }
+    .station-dist {
+      display: inline-block; font-size: .62rem; font-weight: 500;
+      padding: 2px 7px; border-radius: 20px; margin-left: 6px;
+      vertical-align: middle;
+      background: rgba(255,255,255,.07); color: var(--text-muted);
+    }
 
     .empty-msg {
       text-align: center; color: var(--text-muted);
@@ -387,6 +393,7 @@ let smnLocations  = {};   // id → {name, canton, lat, lon}
 let selected      = null; // chosen station object
 let samplerName   = null; // selected person
 let lastResult    = null; // data for save
+let userPos       = null; // GPS position of the user (set asynchronously)
 
 // ─────────────────────────────────────────────────────────────
 // Person picker
@@ -508,11 +515,20 @@ function findNearestSmn(lat, lon) {
 // ─────────────────────────────────────────────────────────────
 function renderList(query = '') {
   const q   = query.toLowerCase().trim();
-  const filtered = q
+  let filtered = q
     ? allStations.filter(s =>
         s.name.toLowerCase().includes(q) ||
         s.water_body.toLowerCase().includes(q))
-    : allStations;
+    : allStations.slice();
+
+  // Attach distance to each station if GPS is available
+  if (userPos) {
+    for (const s of filtered) {
+      s._dist = haversine(userPos.lat, userPos.lon, s.lat, s.lon);
+    }
+    // Sort by distance only when no search query is active
+    if (!q) filtered.sort((a, b) => a._dist - b._dist);
+  }
 
   const ul = $('station-list');
   ul.innerHTML = '';
@@ -528,8 +544,11 @@ function renderList(query = '') {
     const tag = s.body_type === 'lake'
       ? `<span class="station-tag tag-lake">lake</span>`
       : `<span class="station-tag tag-river">river</span>`;
+    const distBadge = (userPos && s._dist != null)
+      ? `<span class="station-dist">📍 ${s._dist < 1 ? (s._dist * 1000).toFixed(0) + ' m' : s._dist.toFixed(1) + ' km'}</span>`
+      : '';
     li.innerHTML = `
-      <div class="station-name">${s.name}${tag}</div>
+      <div class="station-name">${s.name}${tag}${distBadge}</div>
       <div class="station-meta">${s.water_body} · ${s.value.toFixed(1)} °C now</div>`;
     li.addEventListener('click', () => selectStation(s));
     ul.appendChild(li);
@@ -713,7 +732,18 @@ async function init() {
       loadSmnLocations()
     ]);
     renderList();
-    setStatus(`${allStations.length} stations loaded. Choose one above.`);
+    setStatus(`${allStations.length} stations loaded. Requesting your location…`);
+
+    // Request GPS in background; re-render once we have it
+    getUserPosition().then(pos => {
+      userPos = pos;
+      if (pos) {
+        setStatus(`${allStations.length} stations loaded · sorted by distance from you.`);
+      } else {
+        setStatus(`${allStations.length} stations loaded. Choose one above.`);
+      }
+      renderList($('search').value);
+    });
   } catch (err) {
     setStatus('⚠️ Failed to load stations. Check connection.');
     showToast('Network error: ' + err.message, 4000);
