@@ -527,6 +527,27 @@
     }
     .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+    /* Location picker row */
+    .edit-loc-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .edit-loc-display {
+      flex: 1; font-size: .88rem; color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+    }
+    .edit-loc-display.has-pin { color: var(--text); font-weight: 500; }
+    .edit-loc-btn {
+      background: rgba(0,201,177,.12); border: 1px solid rgba(0,201,177,.3);
+      border-radius: 10px; color: var(--accent);
+      font-size: .8rem; font-weight: 600; font-family: inherit;
+      padding: 7px 12px; cursor: pointer; white-space: nowrap;
+      transition: background .2s; -webkit-tap-highlight-color: transparent;
+    }
+    .edit-loc-btn:active { background: rgba(0,201,177,.22); }
+
     /* Cyanobacteria toggle */
     .cyano-toggle {
       display: flex; gap: 6px;
@@ -654,14 +675,11 @@
         <input id="ef-smn" class="edit-input" type="text" readonly />
       </div>
     </div>
-    <div class="edit-row">
-      <div class="edit-field">
-        <div class="edit-label">Sample Lat</div>
-        <input id="ef-lat" class="edit-input" type="number" step="0.00001" inputmode="decimal" placeholder="not pinned" />
-      </div>
-      <div class="edit-field">
-        <div class="edit-label">Sample Lon</div>
-        <input id="ef-lon" class="edit-input" type="number" step="0.00001" inputmode="decimal" placeholder="not pinned" />
+    <div class="edit-field">
+      <div class="edit-label">Sample Location</div>
+      <div class="edit-loc-row">
+        <div class="edit-loc-display" id="ef-loc-display">not pinned</div>
+        <button class="edit-loc-btn" id="ef-loc-btn">📍 Change</button>
       </div>
     </div>
 
@@ -1143,11 +1161,14 @@ function showResult() {
 let pickerMap = null;
 let pickerMarker = null;
 let pickerGpsMarker = null;
+let mapPickerMode = 'sampling'; // 'sampling' | 'editing'
 
-function openMapPicker(gpsPos) {
+function openMapPicker(gpsPos, mode = 'sampling', existingLat = null, existingLon = null) {
+  mapPickerMode = mode;
   $('map-picker').classList.add('open');
   $('mp-confirm').disabled = true;
   $('mp-coords').innerHTML = 'Tap the map to pin a location';
+  $('mp-skip').textContent = mode === 'editing' ? 'Back' : 'Skip';
 
   // Init map once
   if (!pickerMap) {
@@ -1163,8 +1184,16 @@ function openMapPicker(gpsPos) {
   if (pickerMarker)    { pickerMap.removeLayer(pickerMarker);    pickerMarker    = null; }
   if (pickerGpsMarker) { pickerMap.removeLayer(pickerGpsMarker); pickerGpsMarker = null; }
 
-  // Center on user's GPS and show position dot, or fall back to Switzerland
-  if (gpsPos) {
+  // If editing and an existing pin exists, show it and center on it
+  if (existingLat != null && existingLon != null) {
+    const latlng = L.latLng(existingLat, existingLon);
+    pickerMarker = L.marker(latlng, {
+      icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32,32], iconAnchor: [16,32] })
+    }).addTo(pickerMap);
+    pickerMap.setView(latlng, 15);
+    $('mp-coords').innerHTML = `<span>${existingLat.toFixed(5)}, ${existingLon.toFixed(5)}</span>`;
+    $('mp-confirm').disabled = false;
+  } else if (gpsPos) {
     pickerMap.setView([gpsPos.lat, gpsPos.lon], 15);
     pickerGpsMarker = L.circleMarker([gpsPos.lat, gpsPos.lon], {
       radius: 9, color: '#4285f4', fillColor: '#4285f4',
@@ -1179,19 +1208,21 @@ function openMapPicker(gpsPos) {
 
 function onPickerClick(e) {
   const { lat, lng } = e.latlng;
-  if (!lastResult) return;
-  lastResult.samplePos = { lat, lon: lng };
+
+  if (mapPickerMode === 'sampling') {
+    if (!lastResult) return;
+    lastResult.samplePos = { lat, lon: lng };
+  } else {
+    // editing mode — temporarily store in edit state
+    editSampleLat = lat;
+    editSampleLon = lng;
+  }
 
   if (pickerMarker) {
     pickerMarker.setLatLng(e.latlng);
   } else {
     pickerMarker = L.marker(e.latlng, {
-      icon: L.divIcon({
-        className: 'sample-pin',
-        html: '💧',
-        iconSize:   [32, 32],
-        iconAnchor: [16, 32]
-      })
+      icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32,32], iconAnchor: [16,32] })
     }).addTo(pickerMap);
   }
 
@@ -1201,17 +1232,29 @@ function onPickerClick(e) {
 
 function closeMapPicker() {
   $('map-picker').classList.remove('open');
+  $('mp-skip').textContent = 'Skip'; // reset for next open
 }
 
 function confirmLocation() {
   closeMapPicker();
-  showResult();
+  if (mapPickerMode === 'editing') {
+    updateEditLocDisplay();
+    $('edit-panel').classList.add('open');
+  } else {
+    showResult();
+  }
 }
 
 function skipLocation() {
-  if (lastResult) lastResult.samplePos = null;
   closeMapPicker();
-  showResult();
+  if (mapPickerMode === 'editing') {
+    // Back to edit panel without changing the location
+    editSampleLat = editSampleLat; // unchanged
+    $('edit-panel').classList.add('open');
+  } else {
+    if (lastResult) lastResult.samplePos = null;
+    showResult();
+  }
 }
 
 // ── Cloud Save ────────────────────────────────────────────────
@@ -1329,11 +1372,28 @@ function toggleHistory() {
 
 // ── Edit Panel ────────────────────────────────────────────────
 let editingId   = null;
-let editCyano   = null; // null | true | false
+let editCyano   = null;
+let editSampleLat = null;
+let editSampleLon = null;
+
+function updateEditLocDisplay() {
+  const el = $('ef-loc-display');
+  if (editSampleLat != null && editSampleLon != null) {
+    el.textContent = `${editSampleLat.toFixed(5)}, ${editSampleLon.toFixed(5)}`;
+    el.classList.add('has-pin');
+    $('ef-loc-btn').textContent = '📍 Change';
+  } else {
+    el.textContent = 'not pinned';
+    el.classList.remove('has-pin');
+    $('ef-loc-btn').textContent = '📍 Set location';
+  }
+}
 
 function openEditPanel(s) {
-  editingId = s.id;
-  editCyano = s.cyanobacteria ?? null;
+  editingId     = s.id;
+  editCyano     = s.cyanobacteria ?? null;
+  editSampleLat = s.sampleLat ?? null;
+  editSampleLon = s.sampleLon ?? null;
 
   // Read-only info
   $('ef-station').value = s.stationName || '';
@@ -1345,11 +1405,9 @@ function openEditPanel(s) {
   $('ef-water').value   = s.waterTemp   ?? '';
   $('ef-air').value     = s.airTemp     ?? '';
   $('ef-smn').value     = s.smnName ? `${s.smnName} (${s.smnDist?.toFixed(1)} km)` : '';
-  $('ef-lat').value     = s.sampleLat   ?? '';
-  $('ef-lon').value     = s.sampleLon   ?? '';
 
   $('edit-sub').textContent = `${s.stationName} · ${formatIso(s.savedAt)}`;
-
+  updateEditLocDisplay();
   setCyanoUI(editCyano);
   $('edit-panel').classList.add('open');
 }
@@ -1374,9 +1432,6 @@ async function saveEdit() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Saving…';
 
-  const lat = $('ef-lat').value.trim();
-  const lon = $('ef-lon').value.trim();
-
   try {
     await updateDoc(
       doc(db, 'users', currentUser.uid, 'samplings', editingId),
@@ -1385,8 +1440,8 @@ async function saveEdit() {
         volumeMl:      parseFloat($('ef-volume').value) || null,
         waterTemp:     parseFloat($('ef-water').value)  || null,
         airTemp:       $('ef-air').value.trim() ? parseFloat($('ef-air').value) : null,
-        sampleLat:     lat ? parseFloat(lat) : null,
-        sampleLon:     lon ? parseFloat(lon) : null,
+        sampleLat:     editSampleLat,
+        sampleLon:     editSampleLon,
         cyanobacteria: editCyano
       }
     );
@@ -1485,6 +1540,10 @@ $('mp-confirm').addEventListener('click', confirmLocation);
 $('mp-skip').addEventListener('click', skipLocation);
 $('edit-close').addEventListener('click', closeEditPanel);
 $('edit-save').addEventListener('click', saveEdit);
+$('ef-loc-btn').addEventListener('click', () => {
+  $('edit-panel').classList.remove('open');
+  openMapPicker(userPos, 'editing', editSampleLat, editSampleLon);
+});
 document.querySelectorAll('.cyano-btn').forEach(btn =>
   btn.addEventListener('click', () => {
     const v = btn.dataset.cyano;
