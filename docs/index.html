@@ -470,6 +470,101 @@
       font-size: .58rem !important;
     }
     .leaflet-control-attribution a { color: rgba(0,201,177,.55) !important; }
+
+    /* ── Edit Panel ───────────────────────────────────────────────── */
+    #edit-panel {
+      position: fixed; inset: 0; z-index: 600;
+      background: var(--bg); display: none; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.32,1,.6,1);
+    }
+    #edit-panel.open { display: flex; transform: translateY(0); }
+
+    #edit-header {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 16px) 20px 14px;
+      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .edit-title-wrap { flex: 1; }
+    .edit-title {
+      font-size: 1rem; font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .edit-sub { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+    #edit-close {
+      background: none; border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px; color: var(--text-muted);
+      font-size: .8rem; font-family: inherit; padding: 7px 14px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: border-color .2s, color .2s;
+    }
+    #edit-close:active { color: var(--text); border-color: rgba(255,255,255,.3); }
+
+    #edit-body {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 20px;
+    }
+
+    .edit-field { margin-bottom: 18px; }
+    .edit-label {
+      font-size: .72rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+    }
+    .edit-input {
+      width: 100%; padding: 13px 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-size: .95rem; font-family: inherit;
+      outline: none; transition: border-color .2s; appearance: none;
+    }
+    .edit-input:focus { border-color: var(--accent); }
+    .edit-input[readonly] {
+      opacity: .55; cursor: default;
+      background: rgba(255,255,255,.03);
+    }
+    .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Cyanobacteria toggle */
+    .cyano-toggle {
+      display: flex; gap: 6px;
+    }
+    .cyano-btn {
+      flex: 1; padding: 12px 8px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 12px; color: var(--text-muted);
+      font-size: .85rem; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cyano-btn.active-null  { border-color: rgba(136,152,184,.5); color: var(--text); background: rgba(136,152,184,.12); }
+    .cyano-btn.active-yes   { border-color: #ff5555; color: #ff7070; background: rgba(255,85,85,.12); }
+    .cyano-btn.active-no    { border-color: var(--accent); color: var(--accent); background: rgba(0,201,177,.12); }
+
+    /* Cyano badge in history */
+    .hi-cyano-yes { font-size: .62rem; background: rgba(255,85,85,.15); color: #ff7070; border: 1px solid rgba(255,85,85,.3); border-radius: 10px; padding: 2px 8px; margin-left: 4px; }
+    .hi-cyano-no  { font-size: .62rem; background: rgba(0,201,177,.12); color: var(--accent); border: 1px solid rgba(0,201,177,.2); border-radius: 10px; padding: 2px 8px; margin-left: 4px; }
+
+    #edit-footer {
+      flex-shrink: 0;
+      padding: 14px 20px calc(var(--safe-bot) + 14px);
+      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+    }
+    #edit-save {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #00c9b1, #0087e0);
+      border: none; border-radius: var(--radius);
+      color: #fff; font-size: 1rem; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 16px rgba(0,201,177,.35);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+    }
+    #edit-save:disabled { opacity: .45; cursor: not-allowed; }
+    #edit-save:not(:disabled):active { opacity: .85; }
   </style>
 </head>
 <body>
@@ -510,6 +605,82 @@
 
     <p id="auth-error" class="auth-error"></p>
     <button id="auth-submit" class="auth-btn">Log In</button>
+  </div>
+</div>
+
+<!-- ── Edit Panel ─────────────────────────────────────────────── -->
+<div id="edit-panel">
+  <div id="edit-header">
+    <div class="edit-title-wrap">
+      <div class="edit-title">✏️ Edit Sampling</div>
+      <div class="edit-sub" id="edit-sub">Loading…</div>
+    </div>
+    <button id="edit-close">Cancel</button>
+  </div>
+
+  <div id="edit-body">
+    <!-- Read-only info -->
+    <div class="edit-field">
+      <div class="edit-label">Measurement Station</div>
+      <input id="ef-station" class="edit-input" type="text" readonly />
+    </div>
+    <div class="edit-field">
+      <div class="edit-label">Sampled at</div>
+      <input id="ef-date" class="edit-input" type="text" readonly />
+    </div>
+
+    <!-- Editable fields -->
+    <div class="edit-field">
+      <div class="edit-label">Sampler name</div>
+      <input id="ef-sampler" class="edit-input" type="text" placeholder="Sampler name" />
+    </div>
+    <div class="edit-row">
+      <div class="edit-field">
+        <div class="edit-label">Volume (ml)</div>
+        <input id="ef-volume" class="edit-input" type="number" min="1" inputmode="numeric" />
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Water Temp (°C)</div>
+        <input id="ef-water" class="edit-input" type="number" step="0.01" inputmode="decimal" />
+      </div>
+    </div>
+    <div class="edit-row">
+      <div class="edit-field">
+        <div class="edit-label">Air Temp (°C)</div>
+        <input id="ef-air" class="edit-input" type="number" step="0.1" inputmode="decimal" placeholder="N/A" />
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">SMN Station</div>
+        <input id="ef-smn" class="edit-input" type="text" readonly />
+      </div>
+    </div>
+    <div class="edit-row">
+      <div class="edit-field">
+        <div class="edit-label">Sample Lat</div>
+        <input id="ef-lat" class="edit-input" type="number" step="0.00001" inputmode="decimal" placeholder="not pinned" />
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Sample Lon</div>
+        <input id="ef-lon" class="edit-input" type="number" step="0.00001" inputmode="decimal" placeholder="not pinned" />
+      </div>
+    </div>
+
+    <!-- Cyanobacteria -->
+    <div class="edit-field">
+      <div class="edit-label">Cyanobacteria</div>
+      <div class="cyano-toggle">
+        <button class="cyano-btn" id="cyano-null" data-cyano="null">🔬 Not analyzed</button>
+        <button class="cyano-btn" id="cyano-yes"  data-cyano="yes">⚠️ Yes</button>
+        <button class="cyano-btn" id="cyano-no"   data-cyano="no">✅ No</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-footer">
+    <button id="edit-save">
+      <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save changes
+    </button>
   </div>
 </div>
 
@@ -617,6 +788,7 @@ import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, updateProfile,
          onAuthStateChanged, signOut }            from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { getFirestore, collection, addDoc,
+         updateDoc, doc,
          query, orderBy, getDocs }               from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 // ── Firebase ──────────────────────────────────────────────────
@@ -987,12 +1159,17 @@ function openMapPicker(gpsPos) {
     pickerMap.on('click', onPickerClick);
   }
 
-  // Remove old sample marker
-  if (pickerMarker) { pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+  // Remove old markers
+  if (pickerMarker)    { pickerMap.removeLayer(pickerMarker);    pickerMarker    = null; }
+  if (pickerGpsMarker) { pickerMap.removeLayer(pickerGpsMarker); pickerGpsMarker = null; }
 
-  // Center on user's known GPS position (for station sorting) or Switzerland
+  // Center on user's GPS and show position dot, or fall back to Switzerland
   if (gpsPos) {
     pickerMap.setView([gpsPos.lat, gpsPos.lon], 15);
+    pickerGpsMarker = L.circleMarker([gpsPos.lat, gpsPos.lon], {
+      radius: 9, color: '#4285f4', fillColor: '#4285f4',
+      fillOpacity: .55, weight: 2.5, interactive: false
+    }).addTo(pickerMap);
   } else {
     pickerMap.setView([46.818, 8.228], 8);
   }
@@ -1070,7 +1247,8 @@ async function saveToCloud() {
       smnName:     smnLoc?.name   ?? null,
       smnDist:     smnDist        ?? null,
       sampleLat:   samplePos?.lat ?? null,
-      sampleLon:   samplePos?.lon ?? null
+      sampleLon:   samplePos?.lon ?? null,
+      cyanobacteria: null
     });
     showToast('☁️ Saved to your account!');
     await loadHistory();
@@ -1112,11 +1290,16 @@ function renderHistory(items) {
       : `<span class="station-tag tag-river">river</span>`;
     const waterStr = s.waterTemp != null ? `${s.waterTemp.toFixed(2)} °C` : 'N/A';
     const airStr   = s.airTemp   != null ? `${s.airTemp.toFixed(1)} °C`   : 'N/A';
+    const cyanoBadge = s.cyanobacteria === true
+      ? `<span class="hi-cyano-yes">⚠️ Cyano+</span>`
+      : s.cyanobacteria === false
+        ? `<span class="hi-cyano-no">✅ Cyano−</span>`
+        : '';
     return `
-      <div class="history-item">
+      <div class="history-item" data-id="${s.id}" style="cursor:pointer">
         <div class="hi-row">
-          <span class="hi-station">${s.stationName}</span>${bodyTag}
-          <span class="hi-cloud">☁️ saved</span>
+          <span class="hi-station">${s.stationName}</span>${bodyTag}${cyanoBadge}
+          <span class="hi-cloud">✏️ edit</span>
         </div>
         <div class="hi-temps">
           <span class="hi-temp water-color">🌊 ${waterStr}</span>
@@ -1128,12 +1311,95 @@ function renderHistory(items) {
         </div>
       </div>`;
   }).join('');
+
+  // Attach click handlers after rendering
+  $('history-list').querySelectorAll('.history-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const item = items.find(s => s.id === el.dataset.id);
+      if (item) openEditPanel(item);
+    });
+  });
 }
 
 function toggleHistory() {
   historyOpen = !historyOpen;
   $('history-list').classList.toggle('open', historyOpen);
   $('history-chevron').classList.toggle('open', historyOpen);
+}
+
+// ── Edit Panel ────────────────────────────────────────────────
+let editingId   = null;
+let editCyano   = null; // null | true | false
+
+function openEditPanel(s) {
+  editingId = s.id;
+  editCyano = s.cyanobacteria ?? null;
+
+  // Read-only info
+  $('ef-station').value = s.stationName || '';
+  $('ef-date').value    = formatIso(s.savedAt);
+
+  // Editable fields
+  $('ef-sampler').value = s.samplerName || '';
+  $('ef-volume').value  = s.volumeMl    ?? '';
+  $('ef-water').value   = s.waterTemp   ?? '';
+  $('ef-air').value     = s.airTemp     ?? '';
+  $('ef-smn').value     = s.smnName ? `${s.smnName} (${s.smnDist?.toFixed(1)} km)` : '';
+  $('ef-lat').value     = s.sampleLat   ?? '';
+  $('ef-lon').value     = s.sampleLon   ?? '';
+
+  $('edit-sub').textContent = `${s.stationName} · ${formatIso(s.savedAt)}`;
+
+  setCyanoUI(editCyano);
+  $('edit-panel').classList.add('open');
+}
+
+function closeEditPanel() {
+  $('edit-panel').classList.remove('open');
+  editingId = null;
+}
+
+function setCyanoUI(val) {
+  editCyano = val;
+  $('cyano-null').className = 'cyano-btn' + (val === null  ? ' active-null' : '');
+  $('cyano-yes').className  = 'cyano-btn' + (val === true  ? ' active-yes'  : '');
+  $('cyano-no').className   = 'cyano-btn' + (val === false ? ' active-no'   : '');
+}
+
+async function saveEdit() {
+  if (!editingId || !currentUser) return;
+
+  const btn = $('edit-save');
+  const origHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Saving…';
+
+  const lat = $('ef-lat').value.trim();
+  const lon = $('ef-lon').value.trim();
+
+  try {
+    await updateDoc(
+      doc(db, 'users', currentUser.uid, 'samplings', editingId),
+      {
+        samplerName:   $('ef-sampler').value.trim() || null,
+        volumeMl:      parseFloat($('ef-volume').value) || null,
+        waterTemp:     parseFloat($('ef-water').value)  || null,
+        airTemp:       $('ef-air').value.trim() ? parseFloat($('ef-air').value) : null,
+        sampleLat:     lat ? parseFloat(lat) : null,
+        sampleLon:     lon ? parseFloat(lon) : null,
+        cyanobacteria: editCyano
+      }
+    );
+    showToast('✅ Sampling updated!');
+    closeEditPanel();
+    await loadHistory();
+  } catch (err) {
+    console.error(err);
+    showToast('⚠️ Save failed. Check connection.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origHTML;
+  }
 }
 
 // ── Save .txt ─────────────────────────────────────────────────
@@ -1217,6 +1483,14 @@ $('tab-register').addEventListener('click', () => setAuthMode('register'));
 $('history-toggle-btn').addEventListener('click', toggleHistory);
 $('mp-confirm').addEventListener('click', confirmLocation);
 $('mp-skip').addEventListener('click', skipLocation);
+$('edit-close').addEventListener('click', closeEditPanel);
+$('edit-save').addEventListener('click', saveEdit);
+document.querySelectorAll('.cyano-btn').forEach(btn =>
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.cyano;
+    setCyanoUI(v === 'yes' ? true : v === 'no' ? false : null);
+  })
+);
 
 // Allow Enter key in auth fields
 ['auth-name', 'auth-email', 'auth-password'].forEach(id => {
