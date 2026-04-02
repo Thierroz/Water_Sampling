@@ -1789,6 +1789,37 @@ function switchTab(tab) {
 }
 
 // ── Events ────────────────────────────────────────────────
+// ── All event listeners ───────────────────────────────────────
+$('search').addEventListener('input', e => renderList(e.target.value));
+$('take-btn').addEventListener('click', takeSample);
+$('save-btn').addEventListener('click', saveFile);
+$('cloud-save-btn').addEventListener('click', saveToCloud);
+$('sign-out-btn').addEventListener('click', () => signOut(auth));
+$('auth-submit').addEventListener('click', handleAuthSubmit);
+$('tab-login').addEventListener('click', () => setAuthMode('login'));
+$('tab-register').addEventListener('click', () => setAuthMode('register'));
+$('history-toggle-btn').addEventListener('click', toggleHistory);
+$('mp-confirm').addEventListener('click', confirmLocation);
+$('mp-skip').addEventListener('click', skipLocation);
+$('edit-close').addEventListener('click', closeEditPanel);
+$('edit-save').addEventListener('click', saveEdit);
+$('ef-loc-btn').addEventListener('click', () => {
+  $('edit-panel').classList.remove('open');
+  openMapPicker(userPos, 'editing', editSampleLat, editSampleLon);
+});
+document.querySelectorAll('.cyano-btn').forEach(btn =>
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.cyano;
+    setCyanoUI(v === 'yes' ? true : v === 'no' ? false : null);
+  })
+);
+
+// Enter key in auth fields
+['auth-name', 'auth-email', 'auth-password'].forEach(id => {
+  $(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuthSubmit(); });
+});
+
+// Tab nav
 $('nav-sample').addEventListener('click', () => switchTab('sample'));
 $('nav-map').addEventListener('click',    () => switchTab('map'));
 $('map-load-btn').addEventListener('click', loadSharedMap);
@@ -1797,7 +1828,6 @@ $('map-load-btn').addEventListener('click', loadSharedMap);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 
 init();
-// (all event listeners registered above with the community map block)
 </script>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
