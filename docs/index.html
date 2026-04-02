@@ -471,6 +471,118 @@
     }
     .leaflet-control-attribution a { color: rgba(0,201,177,.55) !important; }
 
+    /* ── Bottom Nav ─────────────────────────────────────────────── */
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      display: flex;
+      background: rgba(8,18,34,.97); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bot);
+    }
+    .nav-tab {
+      flex: 1; padding: 10px 0;
+      background: none; border: none;
+      color: var(--text-muted); font-family: inherit;
+      font-size: .65rem; font-weight: 500; letter-spacing: .04em;
+      cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      transition: color .2s; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-tab.active { color: var(--accent); }
+    .nav-tab.active svg { stroke: var(--accent); }
+    .nav-tab svg { stroke: var(--text-muted); transition: stroke .2s; }
+
+    /* Extra bottom-padding on the scrollable sample content */
+    .app { padding-bottom: calc(68px + var(--safe-bot)); }
+
+    /* ── Community Map Pane ─────────────────────────────────── */
+    #pane-map {
+      position: fixed; inset: 0;
+      z-index: 100;
+      display: none; flex-direction: column;
+      background: var(--bg);
+      padding-bottom: calc(68px + var(--safe-bot));
+    }
+    #pane-map.open { display: flex; }
+
+    #pane-map-header {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 14px) 18px 10px;
+      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .pm-title {
+      font-size: .95rem; font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .pm-sub { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+    #pm-controls {
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px;
+      background: rgba(10,22,40,.85); border-bottom: 1px solid var(--border);
+    }
+    #pm-date-row {
+      flex: 1; display: flex; align-items: center; gap: 6px;
+    }
+    #pm-date-row input[type="date"] {
+      flex: 1; padding: 9px 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-size: .8rem; font-family: inherit; outline: none;
+      appearance: none; color-scheme: dark;
+    }
+    #pm-date-row input[type="date"]:focus { border-color: var(--accent); }
+    .pm-date-sep { color: var(--text-muted); font-size: .85rem; }
+    #map-load-btn {
+      padding: 9px 16px;
+      background: linear-gradient(135deg, #00c9b1, #0087e0);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: .82rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0,201,177,.3);
+      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+    }
+    #map-load-btn:disabled { opacity: .45; }
+    #map-load-btn:not(:disabled):active { opacity: .8; }
+
+    #pm-legend {
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 7px 16px;
+      background: rgba(10,22,40,.75);
+      border-bottom: 1px solid var(--border);
+      font-size: .68rem;
+    }
+    .leg-item { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+    .leg-pos { color: #ff6666; }
+    .leg-neg { color: #22d96a; }
+    .leg-unk { color: #4285f4; }
+    .pm-count { margin-left: auto; color: var(--text-muted); font-size: .65rem; }
+
+    #shared-map { flex: 1; }
+
+    /* Marker popup styling */
+    .leaflet-popup-content-wrapper {
+      background: var(--surface2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 8px 28px rgba(0,0,0,.5) !important;
+      font-family: 'Inter', sans-serif !important;
+      font-size: .8rem !important;
+    }
+    .leaflet-popup-tip { background: var(--surface2) !important; }
+    .leaflet-popup-close-button { color: var(--text-muted) !important; font-size: 14px !important; }
+    .pm-popup-station { font-weight: 700; font-size: .88rem; margin-bottom: 5px; }
+    .pm-popup-row { color: var(--text-muted); line-height: 1.7; }
+    .pm-popup-row b { color: var(--text); }
+    .pm-popup-cyano-pos { color: #ff6666; font-weight: 600; }
+    .pm-popup-cyano-neg { color: #22d96a; font-weight: 600; }
+    .pm-popup-cyano-unk { color: #4285f4; font-weight: 600; }
+
     /* ── Edit Panel ───────────────────────────────────────────────── */
     #edit-panel {
       position: fixed; inset: 0; z-index: 600;
@@ -796,6 +908,46 @@
     <div id="history-list"></div>
   </div>
 
+  <!-- ── Community Map Pane ───────────────────────────────────────── -->
+  <div id="pane-map">
+    <div id="pane-map-header">
+      <div class="pm-title-wrap">
+        <div class="pm-title">🗺️ Community Map</div>
+        <div class="pm-sub">All samplings across Switzerland</div>
+      </div>
+    </div>
+
+    <div id="pm-controls">
+      <div id="pm-date-row">
+        <input type="date" id="map-from" />
+        <span class="pm-date-sep">–</span>
+        <input type="date" id="map-to" />
+      </div>
+      <button id="map-load-btn">📡 Load</button>
+    </div>
+
+    <div id="pm-legend">
+      <span class="leg-item leg-pos">&#9679; Cyano+</span>
+      <span class="leg-item leg-neg">&#9679; Cyano−</span>
+      <span class="leg-item leg-unk">&#9679; Not analyzed</span>
+      <span id="pm-count" class="pm-count"></span>
+    </div>
+
+    <div id="shared-map"></div>
+  </div>
+
+  <!-- ── Bottom Nav ───────────────────────────────────────────────── -->
+  <nav id="bottom-nav">
+    <button class="nav-tab active" id="nav-sample">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-5-6H9z"/><path d="M14 3v5a1 1 0 0 0 1 1h5M9 12h6M9 16h4"/></svg>
+      <span>Sample</span>
+    </button>
+    <button class="nav-tab" id="nav-map">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
+      <span>Map</span>
+    </button>
+  </nav>
+
 </div><!-- .app -->
 
 <div id="toast"></div>
@@ -806,8 +958,11 @@ import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, updateProfile,
          onAuthStateChanged, signOut }            from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { getFirestore, collection, addDoc,
-         updateDoc, doc,
-         query, orderBy, getDocs }               from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+         updateDoc, doc, collectionGroup,
+         query, orderBy, where, getDocs }         from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+// NOTE: For collectionGroup to work, update your Firestore rules to:
+// match /{path=**}/samplings/{doc} { allow read: if request.auth != null; }
+// match /users/{uid}/samplings/{doc} { allow write: if request.auth != null && request.auth.uid == uid; }
 
 // ── Firebase ──────────────────────────────────────────────────
 const fbApp = initializeApp({
@@ -1526,40 +1681,123 @@ async function init() {
   }
 }
 
-// ── Events ────────────────────────────────────────────────────
-$('search').addEventListener('input', e => renderList(e.target.value));
-$('take-btn').addEventListener('click', takeSample);
-$('save-btn').addEventListener('click', saveFile);
-$('cloud-save-btn').addEventListener('click', saveToCloud);
-$('sign-out-btn').addEventListener('click', () => signOut(auth));
-$('auth-submit').addEventListener('click', handleAuthSubmit);
-$('tab-login').addEventListener('click', () => setAuthMode('login'));
-$('tab-register').addEventListener('click', () => setAuthMode('register'));
-$('history-toggle-btn').addEventListener('click', toggleHistory);
-$('mp-confirm').addEventListener('click', confirmLocation);
-$('mp-skip').addEventListener('click', skipLocation);
-$('edit-close').addEventListener('click', closeEditPanel);
-$('edit-save').addEventListener('click', saveEdit);
-$('ef-loc-btn').addEventListener('click', () => {
-  $('edit-panel').classList.remove('open');
-  openMapPicker(userPos, 'editing', editSampleLat, editSampleLon);
-});
-document.querySelectorAll('.cyano-btn').forEach(btn =>
-  btn.addEventListener('click', () => {
-    const v = btn.dataset.cyano;
-    setCyanoUI(v === 'yes' ? true : v === 'no' ? false : null);
-  })
-);
+// ── Community Map ───────────────────────────────────────────────
+let sharedMap     = null;
+let sharedMarkers = [];
 
-// Allow Enter key in auth fields
-['auth-name', 'auth-email', 'auth-password'].forEach(id => {
-  $(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuthSubmit(); });
-});
+// Default date range: last 30 days → today
+(function initDateRange() {
+  const now  = new Date();
+  const past = new Date(now); past.setDate(past.getDate() - 30);
+  $('map-to').value   = now.toISOString().slice(0,10);
+  $('map-from').value = past.toISOString().slice(0,10);
+})();
+
+function initSharedMap() {
+  if (sharedMap) return;
+  sharedMap = L.map('shared-map').setView([46.818, 8.228], 8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 20
+  }).addTo(sharedMap);
+}
+
+async function loadSharedMap() {
+  if (!currentUser) return;
+  const btn = $('map-load-btn');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  $('pm-count').textContent = '';
+
+  initSharedMap();
+  setTimeout(() => sharedMap.invalidateSize(), 120);
+  sharedMarkers.forEach(m => sharedMap.removeLayer(m));
+  sharedMarkers = [];
+
+  const fromVal = $('map-from').value;
+  const toVal   = $('map-to').value;
+  if (!fromVal || !toVal) { btn.disabled = false; btn.textContent = '📡 Load'; return; }
+
+  const fromIso = new Date(fromVal + 'T00:00:00Z').toISOString();
+  const toIso   = new Date(toVal   + 'T23:59:59Z').toISOString();
+
+  try {
+    const q    = query(
+      collectionGroup(db, 'samplings'),
+      where('savedAt', '>=', fromIso),
+      where('savedAt', '<=', toIso),
+      orderBy('savedAt', 'desc')
+    );
+    const snap  = await getDocs(q);
+    const items = snap.docs.map(d => d.data());
+
+    items.forEach(s => {
+      const lat = s.sampleLat ?? s.stationLat;
+      const lon = s.sampleLon ?? s.stationLon;
+      if (lat == null || lon == null) return;
+
+      const cyano  = s.cyanobacteria;
+      const color  = cyano === true ? '#ff5555' : cyano === false ? '#22d96a' : '#4285f4';
+      const fillOp = cyano === true ? .85        : cyano === false ? .85        : .65;
+
+      const marker = L.circleMarker([lat, lon], {
+        radius: 9, color: '#fff', weight: 1.5,
+        fillColor: color, fillOpacity: fillOp
+      });
+
+      const cyanoHtml = cyano === true
+        ? `<span class="pm-popup-cyano-pos">⚠️ Cyanobacteria detected</span>`
+        : cyano === false
+          ? `<span class="pm-popup-cyano-neg">✅ No cyanobacteria</span>`
+          : `<span class="pm-popup-cyano-unk">🔬 Not yet analyzed</span>`;
+      const locNote = s.sampleLat ? '' : '<br><span style="color:var(--text-muted);font-size:.7rem">Pin: station fallback</span>';
+
+      marker.bindPopup(`
+        <div class="pm-popup-station">${s.stationName || '—'}</div>
+        <div class="pm-popup-row">
+          <b>Date:</b> ${formatIso(s.savedAt)}<br>
+          <b>Sampler:</b> ${s.samplerName || '—'}<br>
+          <b>Water:</b> ${s.waterTemp != null ? s.waterTemp.toFixed(2) + ' °C' : '—'}<br>
+          <b>Volume:</b> ${s.volumeMl != null ? s.volumeMl + ' ml' : '—'}<br>
+          ${cyanoHtml}${locNote}
+        </div>`, { maxWidth: 220 });
+
+      marker.addTo(sharedMap);
+      sharedMarkers.push(marker);
+    });
+
+    $('pm-count').textContent = `${sharedMarkers.length} sampling${sharedMarkers.length !== 1 ? 's' : ''}`;
+    if (sharedMarkers.length > 0)
+      sharedMap.fitBounds(L.featureGroup(sharedMarkers).getBounds().pad(0.15));
+  } catch (err) {
+    console.error('Shared map load failed:', err);
+    showToast('⚠️ Map load failed. Check Firestore rules.');
+  } finally {
+    btn.disabled = false; btn.textContent = '📡 Load';
+  }
+}
+
+// ── Tab switching ────────────────────────────────────────────────
+function switchTab(tab) {
+  const isMap = tab === 'map';
+  $('pane-map').classList.toggle('open', isMap);
+  $('nav-sample').classList.toggle('active', !isMap);
+  $('nav-map').classList.toggle('active',    isMap);
+  if (isMap) {
+    if (sharedMarkers.length === 0) loadSharedMap();
+    else { initSharedMap(); setTimeout(() => sharedMap.invalidateSize(), 120); }
+  }
+}
+
+// ── Events ────────────────────────────────────────────────
+$('nav-sample').addEventListener('click', () => switchTab('sample'));
+$('nav-map').addEventListener('click',    () => switchTab('map'));
+$('map-load-btn').addEventListener('click', loadSharedMap);
 
 // PWA service worker
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 
 init();
+// (all event listeners registered above with the community map block)
 </script>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
