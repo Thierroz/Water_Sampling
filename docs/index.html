@@ -11,6 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-512.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -394,9 +395,100 @@
       box-shadow: 0 8px 30px rgba(0,0,0,.4); z-index: 9999;
     }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── Map Picker Overlay ──────────────────────────────────── */
+    #map-picker {
+      position: fixed; inset: 0; z-index: 500;
+      display: none; flex-direction: column;
+      background: var(--bg);
+    }
+    #map-picker.open { display: flex; }
+
+    #mp-header {
+      flex-shrink: 0;
+      padding: calc(var(--safe-top) + 16px) 20px 14px;
+      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mp-title-wrap { flex: 1; }
+    .mp-title {
+      font-size: 1rem; font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .mp-sub { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+    #mp-skip {
+      background: none; border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px; color: var(--text-muted);
+      font-size: .8rem; font-family: inherit; padding: 7px 14px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: border-color .2s, color .2s; white-space: nowrap;
+    }
+    #mp-skip:active { color: var(--text); border-color: rgba(255,255,255,.3); }
+
+    #mp-map { flex: 1; }
+
+    #mp-footer {
+      flex-shrink: 0;
+      padding: 14px 20px calc(var(--safe-bot) + 14px);
+      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    #mp-coords {
+      flex: 1; font-size: .8rem; color: var(--text-muted); line-height: 1.4;
+    }
+    #mp-coords span { color: var(--text); font-weight: 500; }
+    #mp-confirm {
+      padding: 13px 22px;
+      background: linear-gradient(135deg, #00c9b1, #0087e0);
+      border: none; border-radius: 12px;
+      color: #fff; font-size: .95rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,201,177,.35);
+      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+    }
+    #mp-confirm:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+    #mp-confirm:not(:disabled):active { opacity: .8; }
+
+    /* Sample pin icon */
+    .sample-pin {
+      font-size: 28px; line-height: 1;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,.6));
+      animation: pin-drop .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes pin-drop {
+      from { transform: translateY(-14px) scale(.7); opacity: 0; }
+      to   { transform: translateY(0)     scale(1);   opacity: 1; }
+    }
+
+    /* Leaflet dark attribution */
+    .leaflet-control-attribution {
+      background: rgba(10,22,40,.8) !important;
+      color: rgba(0,201,177,.4) !important;
+      font-size: .58rem !important;
+    }
+    .leaflet-control-attribution a { color: rgba(0,201,177,.55) !important; }
   </style>
 </head>
 <body>
+
+<!-- ── Map Picker Overlay ────────────────────────────────────── -->
+<div id="map-picker">
+  <div id="mp-header">
+    <div class="mp-title-wrap">
+      <div class="mp-title">📍 Pin sample location</div>
+      <div class="mp-sub">Tap the map exactly where you took the sample</div>
+    </div>
+    <button id="mp-skip">Skip</button>
+  </div>
+  <div id="mp-map"></div>
+  <div id="mp-footer">
+    <div id="mp-coords">Tap the map to pin a location</div>
+    <button id="mp-confirm" disabled>Confirm</button>
+  </div>
+</div>
 
 <!-- ── Auth Overlay ──────────────────────────────────────────── -->
 <div id="auth-overlay">
@@ -667,9 +759,9 @@ onAuthStateChanged(auth, user => {
   if (user) {
     $('auth-overlay').style.display = 'none';
     $('main-app').style.display     = '';
-    samplerName = user.displayName || user.email;
-    $('user-name').textContent    = abbreviateName(samplerName);
-    $('sampler-chip').textContent = samplerName;
+    samplerName = user.displayName || '';
+    $('user-name').textContent    = abbreviateName(user.displayName || user.email);
+    $('sampler-chip').textContent = samplerName || '—';
     updateTakeBtn();
     loadHistory();
   } else {
@@ -808,17 +900,12 @@ async function takeSample() {
   setStatus('');
 
   try {
-    label.textContent = 'Getting location…';
-    const [gpsPos, tempData] = await Promise.all([
-      getUserPosition(),
-      apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' })
-    ]);
     label.textContent = 'Fetching data…';
+    const tempData = await apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' });
 
     const entry     = tempData.payload.find(e => e.loc === selected.id && e.par === 'temperature');
     const waterTemp = entry ? entry.val       : selected.value;
     const waterTs   = entry ? entry.timestamp : selected.timestamp;
-    const distToStation = gpsPos ? haversine(gpsPos.lat, gpsPos.lon, selected.lat, selected.lon) : null;
 
     const { id: smnId, loc: smnLoc, dist: smnDist } = findNearestSmn(selected.lat, selected.lon);
     let airTemp = null, airTs = null;
@@ -830,31 +917,13 @@ async function takeSample() {
     lastResult = {
       station: selected, samplerName, volumeMl,
       waterTemp, waterTs, smnId, smnLoc, smnDist,
-      airTemp, airTs, userPos: gpsPos, distToStation,
+      airTemp, airTs,
+      samplePos: null,
       recordedAt: new Date()
     };
 
-    $('r-water').textContent     = waterTemp.toFixed(2);
-    $('r-water-time').textContent = formatTs(waterTs);
-    $('r-air').textContent       = airTemp !== null ? airTemp.toFixed(1) : 'N/A';
-    $('r-air-station').textContent = smnLoc ? `${smnLoc.name} (${smnDist.toFixed(1)} km)` : 'no station';
-
-    const posLine = gpsPos
-      ? `<b>Your position:</b> <span>${gpsPos.lat.toFixed(5)}, ${gpsPos.lon.toFixed(5)} (±${gpsPos.acc} m)</span><br>
-         <b>Distance to station:</b> <span>${distToStation.toFixed(2)} km</span>`
-      : `<b>Your position:</b> <span>not available (GPS denied)</span>`;
-
-    $('r-detail').innerHTML = `
-      <b>Sampler:</b> <span>${samplerName}</span><br>
-      <b>Sample volume:</b> <span>${volumeMl} ml</span><br>
-      <b>Station:</b> <span>${selected.name}</span><br>
-      <b>Water body:</b> <span>${selected.water_body} (${selected.body_type})</span><br>
-      <b>Station coordinates:</b> <span>${selected.lat}, ${selected.lon}</span><br>
-      ${posLine}`;
-
-    $('result').classList.add('visible');
-    $('result').scrollIntoView({ behavior: 'smooth' });
-    setStatus('✅ Sample recorded!');
+    // Open map picker — center on station list GPS if available
+    openMapPicker(userPos);
 
   } catch (err) {
     console.error(err);
@@ -869,6 +938,105 @@ async function takeSample() {
   }
 }
 
+// ── Show result (called after map picker) ─────────────────────
+function showResult() {
+  if (!lastResult) return;
+  const { station, samplerName: sName, volumeMl,
+          waterTemp, waterTs, smnId, smnLoc, smnDist,
+          airTemp, airTs, samplePos } = lastResult;
+
+  $('r-water').textContent      = waterTemp.toFixed(2);
+  $('r-water-time').textContent  = formatTs(waterTs);
+  $('r-air').textContent        = airTemp !== null ? airTemp.toFixed(1) : 'N/A';
+  $('r-air-station').textContent = smnLoc ? `${smnLoc.name} (${smnDist.toFixed(1)} km)` : 'no station';
+
+  const sampleLine = samplePos
+    ? `<b>Sample location:</b> <span>${samplePos.lat.toFixed(5)}, ${samplePos.lon.toFixed(5)}</span>`
+    : `<b>Sample location:</b> <span>not pinned</span>`;
+
+  $('r-detail').innerHTML = `
+    <b>Sampler:</b> <span>${sName}</span><br>
+    <b>Sample volume:</b> <span>${volumeMl} ml</span><br>
+    <b>Station:</b> <span>${station.name}</span><br>
+    <b>Water body:</b> <span>${station.water_body} (${station.body_type})</span><br>
+    <b>Station coordinates:</b> <span>${station.lat}, ${station.lon}</span><br>
+    ${sampleLine}`;
+
+  $('result').classList.add('visible');
+  $('result').scrollIntoView({ behavior: 'smooth' });
+  setStatus('✅ Sample recorded!');
+}
+
+// ── Map Picker ────────────────────────────────────────────────
+let pickerMap = null;
+let pickerMarker = null;
+let pickerGpsMarker = null;
+
+function openMapPicker(gpsPos) {
+  $('map-picker').classList.add('open');
+  $('mp-confirm').disabled = true;
+  $('mp-coords').innerHTML = 'Tap the map to pin a location';
+
+  // Init map once
+  if (!pickerMap) {
+    pickerMap = L.map('mp-map', { zoomControl: true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd', maxZoom: 20
+    }).addTo(pickerMap);
+    pickerMap.on('click', onPickerClick);
+  }
+
+  // Remove old sample marker
+  if (pickerMarker) { pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+
+  // Center on user's known GPS position (for station sorting) or Switzerland
+  if (gpsPos) {
+    pickerMap.setView([gpsPos.lat, gpsPos.lon], 15);
+  } else {
+    pickerMap.setView([46.818, 8.228], 8);
+  }
+
+  setTimeout(() => pickerMap.invalidateSize(), 120);
+}
+
+function onPickerClick(e) {
+  const { lat, lng } = e.latlng;
+  if (!lastResult) return;
+  lastResult.samplePos = { lat, lon: lng };
+
+  if (pickerMarker) {
+    pickerMarker.setLatLng(e.latlng);
+  } else {
+    pickerMarker = L.marker(e.latlng, {
+      icon: L.divIcon({
+        className: 'sample-pin',
+        html: '💧',
+        iconSize:   [32, 32],
+        iconAnchor: [16, 32]
+      })
+    }).addTo(pickerMap);
+  }
+
+  $('mp-coords').innerHTML = `<span>${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`;
+  $('mp-confirm').disabled = false;
+}
+
+function closeMapPicker() {
+  $('map-picker').classList.remove('open');
+}
+
+function confirmLocation() {
+  closeMapPicker();
+  showResult();
+}
+
+function skipLocation() {
+  if (lastResult) lastResult.samplePos = null;
+  closeMapPicker();
+  showResult();
+}
+
 // ── Cloud Save ────────────────────────────────────────────────
 async function saveToCloud() {
   if (!lastResult || !currentUser) return;
@@ -880,31 +1048,29 @@ async function saveToCloud() {
 
   const { station, samplerName: sName, volumeMl,
           waterTemp, waterTs, smnId, smnLoc, smnDist,
-          airTemp, airTs, userPos: uPos, distToStation, recordedAt } = lastResult;
+          airTemp, airTs, samplePos, recordedAt } = lastResult;
 
   try {
     const col = collection(db, 'users', currentUser.uid, 'samplings');
     await addDoc(col, {
-      savedAt:       recordedAt.toISOString(),
-      stationId:     station.id,
-      stationName:   station.name,
-      waterBody:     station.water_body,
-      bodyType:      station.body_type,
-      stationLat:    station.lat,
-      stationLon:    station.lon,
-      samplerName:   sName,
+      savedAt:     recordedAt.toISOString(),
+      stationId:   station.id,
+      stationName: station.name,
+      waterBody:   station.water_body,
+      bodyType:    station.body_type,
+      stationLat:  station.lat,
+      stationLon:  station.lon,
+      samplerName: sName,
       volumeMl,
       waterTemp,
       waterTs,
-      airTemp:       airTemp       ?? null,
-      airTs:         airTs         ?? null,
-      smnId:         smnId         ?? null,
-      smnName:       smnLoc?.name  ?? null,
-      smnDist:       smnDist       ?? null,
-      userLat:       uPos?.lat     ?? null,
-      userLon:       uPos?.lon     ?? null,
-      userAcc:       uPos?.acc     ?? null,
-      distToStation: distToStation ?? null
+      airTemp:     airTemp        ?? null,
+      airTs:       airTs          ?? null,
+      smnId:       smnId          ?? null,
+      smnName:     smnLoc?.name   ?? null,
+      smnDist:     smnDist        ?? null,
+      sampleLat:   samplePos?.lat ?? null,
+      sampleLon:   samplePos?.lon ?? null
     });
     showToast('☁️ Saved to your account!');
     await loadHistory();
@@ -975,7 +1141,7 @@ function saveFile() {
   if (!lastResult) return;
   const { station, samplerName: sName, volumeMl,
           waterTemp, waterTs, smnId, smnLoc, smnDist,
-          airTemp, airTs, userPos: uPos, distToStation, recordedAt } = lastResult;
+          airTemp, airTs, samplePos, recordedAt } = lastResult;
 
   const dateStr  = recordedAt.toISOString().slice(0,10);
   const timeStr  = recordedAt.toTimeString().slice(0,8).replace(/:/g,'-');
@@ -985,10 +1151,9 @@ function saveFile() {
     ? `Air Temp (SMN)       : ${airTemp.toFixed(1)} °C\nSMN Station          : ${smnLoc?.name} (${smnId}, ${smnDist.toFixed(1)} km away)\nAir Temp measured at : ${formatTs(airTs)}`
     : `Air Temperature      : not available`;
 
-  const posLines = uPos
-    ? [`My Position (GPS)    : lat ${uPos.lat.toFixed(5)}, lon ${uPos.lon.toFixed(5)} (±${uPos.acc} m)`,
-       `Distance to Station  : ${distToStation.toFixed(2)} km`]
-    : [`My Position (GPS)    : not available (permission denied)`];
+  const sampleLocLine = samplePos
+    ? `Sample Location      : lat ${samplePos.lat.toFixed(5)}, lon ${samplePos.lon.toFixed(5)}`
+    : `Sample Location      : not pinned`;
 
   const content = [
     `Sampled by           : ${sName}`,
@@ -1004,7 +1169,7 @@ function saveFile() {
     ``,
     airLine,
     ``,
-    ...posLines,
+    sampleLocLine,
     ``,
     `Hydro source : ${HYDRO_BASE}`,
     `SMN source   : ${SMN_BASE}`,
@@ -1050,6 +1215,8 @@ $('auth-submit').addEventListener('click', handleAuthSubmit);
 $('tab-login').addEventListener('click', () => setAuthMode('login'));
 $('tab-register').addEventListener('click', () => setAuthMode('register'));
 $('history-toggle-btn').addEventListener('click', toggleHistory);
+$('mp-confirm').addEventListener('click', confirmLocation);
+$('mp-skip').addEventListener('click', skipLocation);
 
 // Allow Enter key in auth fields
 ['auth-name', 'auth-email', 'auth-password'].forEach(id => {
@@ -1061,5 +1228,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 
 init();
 </script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>
