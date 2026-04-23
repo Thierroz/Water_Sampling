@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -14,27 +15,34 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:         #0a1628;
-      --surface:    #0f2040;
-      --surface2:   #162a50;
-      --border:     rgba(0,201,177,.18);
-      --accent:     #00c9b1;
-      --accent2:    #005fa3;
-      --text:       #e8f0fe;
-      --text-muted: #8898b8;
-      --water:      #00c9b1;
-      --air:        #f6a840;
-      --success:    #22d96a;
-      --danger:     #ff5555;
-      --radius:     18px;
-      --safe-top:   env(safe-area-inset-top, 0px);
-      --safe-bot:   env(safe-area-inset-bottom, 0px);
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    html, body {
+    :root {
+      --bg: #0a1628;
+      --surface: #0f2040;
+      --surface2: #162a50;
+      --border: rgba(0, 201, 177, .18);
+      --accent: #00c9b1;
+      --accent2: #005fa3;
+      --text: #e8f0fe;
+      --text-muted: #8898b8;
+      --water: #00c9b1;
+      --air: #f6a840;
+      --success: #22d96a;
+      --danger: #ff5555;
+      --radius: 18px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+
+    html,
+    body {
       min-height: 100dvh;
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
@@ -44,527 +52,1157 @@
 
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: -1;
+      position: fixed;
+      inset: 0;
+      z-index: -1;
       background:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0,201,177,.18) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(0,95,163,.22) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 201, 177, .18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(0, 95, 163, .22) 0%, transparent 60%),
         var(--bg);
     }
 
     /* ── Auth Overlay ──────────────────────────────────────────── */
     #auth-overlay {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 24px 20px;
       background: var(--bg);
     }
+
     #auth-overlay::before {
       content: '';
-      position: fixed; inset: 0; z-index: -1;
+      position: fixed;
+      inset: 0;
+      z-index: -1;
       background:
-        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0,201,177,.18) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(0,95,163,.22) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 201, 177, .18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(0, 95, 163, .22) 0%, transparent 60%),
         var(--bg);
     }
+
     .auth-card {
-      width: 100%; max-width: 400px;
+      width: 100%;
+      max-width: 400px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 24px;
       padding: 32px 24px;
       backdrop-filter: blur(12px);
       text-align: center;
-      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .5);
     }
+
     .auth-logo {
-      width: 80px; height: 80px;
+      width: 80px;
+      height: 80px;
       margin: 0 auto 14px;
       object-fit: contain;
-      filter: drop-shadow(0 0 18px rgba(0,201,177,.45));
+      filter: drop-shadow(0 0 18px rgba(0, 201, 177, .45));
       animation: float 3.5s ease-in-out infinite;
     }
+
     .auth-title {
-      font-size: 1.5rem; font-weight: 700;
+      font-size: 1.5rem;
+      font-weight: 700;
       background: linear-gradient(135deg, #00c9b1, #00a3ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 4px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
     }
-    .auth-sub { font-size: .78rem; color: var(--text-muted); margin-bottom: 24px; }
+
+    .auth-sub {
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
 
     .auth-tabs {
-      display: flex; background: var(--surface2);
-      border-radius: 12px; padding: 4px; margin-bottom: 20px; gap: 4px;
+      display: flex;
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      gap: 4px;
     }
+
     .auth-tab {
-      flex: 1; padding: 10px; border: none; background: none;
-      border-radius: 9px; color: var(--text-muted); font-family: inherit;
-      font-size: .9rem; font-weight: 500; cursor: pointer;
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      border-radius: 9px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
       transition: background .2s, color .2s;
       -webkit-tap-highlight-color: transparent;
     }
+
     .auth-tab.active {
-      background: var(--surface); color: var(--text);
-      box-shadow: 0 1px 6px rgba(0,0,0,.4);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 6px rgba(0, 0, 0, .4);
     }
+
     .auth-input {
-      width: 100%; padding: 14px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text);
-      font-size: 1rem; font-family: inherit;
-      outline: none; transition: border-color .2s;
-      appearance: none; margin-bottom: 12px; display: block; text-align: left;
+      width: 100%;
+      padding: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+      margin-bottom: 12px;
+      display: block;
+      text-align: left;
     }
-    .auth-input::placeholder { color: var(--text-muted); }
-    .auth-input:focus { border-color: var(--accent); }
+
+    .auth-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .auth-input:focus {
+      border-color: var(--accent);
+    }
+
     .auth-error {
-      font-size: .82rem; color: #ff7070;
-      min-height: 1.2em; margin-bottom: 10px; text-align: left;
+      font-size: .82rem;
+      color: #ff7070;
+      min-height: 1.2em;
+      margin-bottom: 10px;
+      text-align: left;
     }
+
     .auth-btn {
-      width: 100%; padding: 16px;
+      width: 100%;
+      padding: 16px;
       background: linear-gradient(135deg, #00c9b1, #0087e0);
-      border: none; border-radius: var(--radius);
-      color: #fff; font-size: 1.05rem; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 22px rgba(0,201,177,.35);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 22px rgba(0, 201, 177, .35);
       transition: opacity .2s, transform .15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .auth-btn:active { opacity: .85; transform: scale(.98); }
-    .auth-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .auth-btn:active {
+      opacity: .85;
+      transform: scale(.98);
+    }
+
+    .auth-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
 
     /* ── Layout ──────────────────────────────────────────────── */
     .app {
-      max-width: 480px; margin: 0 auto; min-height: 100dvh;
-      display: flex; flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
       padding: calc(var(--safe-top) + 16px) 20px calc(var(--safe-bot) + 24px);
     }
 
     /* ── Header ──────────────────────────────────────────────── */
-    header { text-align: center; margin-bottom: 28px; }
-    .header-top {
-      display: flex; justify-content: flex-end; margin-bottom: 12px;
+    header {
+      text-align: center;
+      margin-bottom: 28px;
     }
+
+    .header-top {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
     .user-badge {
-      display: flex; align-items: center; gap: 7px;
-      background: rgba(0,201,177,.1); border: 1px solid rgba(0,201,177,.22);
-      border-radius: 20px; padding: 6px 10px 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0, 201, 177, .1);
+      border: 1px solid rgba(0, 201, 177, .22);
+      border-radius: 20px;
+      padding: 6px 10px 6px 12px;
       font-size: .78rem;
     }
+
     .user-dot {
-      width: 7px; height: 7px; border-radius: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
       background: var(--accent);
       box-shadow: 0 0 6px var(--accent);
       animation: pulse-dot 2s ease-in-out infinite;
       flex-shrink: 0;
     }
-    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
-    #user-name { color: var(--text); font-weight: 500; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #sign-out-btn {
-      background: none; border: none; color: var(--text-muted);
-      font-size: 1rem; cursor: pointer; padding: 0 2px;
-      font-family: inherit; transition: color .2s;
-      -webkit-tap-highlight-color: transparent; line-height: 1;
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .35
+      }
     }
-    #sign-out-btn:hover { color: var(--danger); }
+
+    #user-name {
+      color: var(--text);
+      font-weight: 500;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #sign-out-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 2px;
+      font-family: inherit;
+      transition: color .2s;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1;
+    }
+
+    #sign-out-btn:hover {
+      color: var(--danger);
+    }
 
     .logo {
-      width: 80px; height: 80px; margin: 0 auto 12px;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 12px;
       object-fit: contain;
-      filter: drop-shadow(0 0 18px rgba(0,201,177,.45));
+      filter: drop-shadow(0 0 18px rgba(0, 201, 177, .45));
       animation: float 3.5s ease-in-out infinite;
     }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-    h1 {
-      font-size: 1.6rem; font-weight: 700;
-      background: linear-gradient(135deg, #00c9b1, #00a3ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
     }
-    .subtitle { margin-top: 4px; font-size: .82rem; color: var(--text-muted); }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      font-size: .82rem;
+      color: var(--text-muted);
+    }
 
     /* ── Cards ───────────────────────────────────────────────── */
     .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
-      backdrop-filter: blur(8px); transition: border-color .25s;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+      transition: border-color .25s;
     }
+
     .card-label {
-      font-size: .72rem; font-weight: 600; letter-spacing: .08em;
-      text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
     }
 
     /* ── Search ──────────────────────────────────────────────── */
-    .search-wrap { position: relative; }
+    .search-wrap {
+      position: relative;
+    }
+
     .search-icon {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      color: var(--text-muted); pointer-events: none;
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
     }
+
     #search {
-      width: 100%; padding: 14px 14px 14px 44px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text);
-      font-size: 1rem; font-family: inherit;
-      outline: none; transition: border-color .2s; appearance: none;
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
     }
-    #search::placeholder { color: var(--text-muted); }
-    #search:focus { border-color: var(--accent); }
+
+    #search::placeholder {
+      color: var(--text-muted);
+    }
+
+    #search:focus {
+      border-color: var(--accent);
+    }
 
     /* ── Station list ────────────────────────────────────────── */
     #station-list {
-      list-style: none; max-height: 28dvh; overflow-y: auto;
+      list-style: none;
+      max-height: 28dvh;
+      overflow-y: auto;
       margin-top: 12px;
-      border-radius: 12px; scrollbar-width: thin; scrollbar-color: var(--surface2) transparent;
+      border-radius: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface2) transparent;
     }
-    #station-list::-webkit-scrollbar { width: 4px; }
-    #station-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+    #station-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #station-list::-webkit-scrollbar-thumb {
+      background: var(--surface2);
+      border-radius: 4px;
+    }
+
     .station-item {
-      padding: 14px 16px; cursor: pointer;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-      border-radius: 8px; transition: background .15s, transform .1s;
-      display: flex; flex-direction: column; gap: 2px;
+      padding: 14px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 8px;
+      transition: background .15s, transform .1s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
-    .station-item:last-child { border-bottom: none; }
-    .station-item:active { transform: scale(.98); background: var(--surface2); }
-    .station-item.selected { background: rgba(0,201,177,.12); border-color: var(--accent); }
-    .station-name { font-weight: 600; font-size: .95rem; }
-    .station-meta { font-size: .76rem; color: var(--text-muted); }
+
+    .station-item:last-child {
+      border-bottom: none;
+    }
+
+    .station-item:active {
+      transform: scale(.98);
+      background: var(--surface2);
+    }
+
+    .station-item.selected {
+      background: rgba(0, 201, 177, .12);
+      border-color: var(--accent);
+    }
+
+    .station-name {
+      font-weight: 600;
+      font-size: .95rem;
+    }
+
+    .station-meta {
+      font-size: .76rem;
+      color: var(--text-muted);
+    }
+
     .station-tag {
-      display: inline-block; font-size: .64rem; font-weight: 600;
-      padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
+      display: inline-block;
+      font-size: .64rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 6px;
+      vertical-align: middle;
     }
-    .tag-river { background: rgba(0,163,255,.18); color: #5dd1ff; }
-    .tag-lake  { background: rgba(0,201,177,.18); color: var(--accent); }
+
+    .tag-river {
+      background: rgba(0, 163, 255, .18);
+      color: #5dd1ff;
+    }
+
+    .tag-lake {
+      background: rgba(0, 201, 177, .18);
+      color: var(--accent);
+    }
+
     .station-dist {
-      display: inline-block; font-size: .62rem; font-weight: 500;
-      padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle;
-      background: rgba(255,255,255,.07); color: var(--text-muted);
+      display: inline-block;
+      font-size: .62rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 6px;
+      vertical-align: middle;
+      background: rgba(255, 255, 255, .07);
+      color: var(--text-muted);
     }
-    .empty-msg { text-align: center; color: var(--text-muted); padding: 24px 0; font-size: .9rem; }
+
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 24px 0;
+      font-size: .9rem;
+    }
 
     /* ── Sampler chip ────────────────────────────────────────── */
     .sampler-chip {
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       padding: 12px 14px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text); font-size: .95rem; font-weight: 500;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: .95rem;
+      font-weight: 500;
     }
-    .sampler-chip-icon { font-size: 1rem; opacity: .7; }
+
+    .sampler-chip-icon {
+      font-size: 1rem;
+      opacity: .7;
+    }
 
     /* ── Volume ──────────────────────────────────────────────── */
-    .volume-wrap { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-    .volume-label { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
-    #volume {
-      flex: 1; padding: 12px 14px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text);
-      font-size: 1rem; font-family: inherit;
-      outline: none; transition: border-color .2s; appearance: none;
+    .volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
     }
-    #volume::placeholder { color: var(--text-muted); }
-    #volume:focus { border-color: var(--accent); }
-    .volume-unit { font-size: .85rem; color: var(--text-muted); }
+
+    .volume-label {
+      font-size: .85rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    #volume {
+      flex: 1;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+    }
+
+    #volume::placeholder {
+      color: var(--text-muted);
+    }
+
+    #volume:focus {
+      border-color: var(--accent);
+    }
+
+    .volume-unit {
+      font-size: .85rem;
+      color: var(--text-muted);
+    }
 
     /* ── CTA button ──────────────────────────────────────────── */
     #take-btn {
-      width: 100%; padding: 18px;
+      width: 100%;
+      padding: 18px;
       background: linear-gradient(135deg, #00c9b1, #0087e0);
-      border: none; border-radius: var(--radius);
-      color: #fff; font-size: 1.1rem; font-weight: 700;
-      letter-spacing: .02em; cursor: pointer;
-      box-shadow: 0 4px 22px rgba(0,201,177,.35);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      cursor: pointer;
+      box-shadow: 0 4px 22px rgba(0, 201, 177, .35);
       transition: opacity .2s, transform .15s, box-shadow .2s;
-      margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       -webkit-tap-highlight-color: transparent;
     }
-    #take-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
-    #take-btn:not(:disabled):active { transform: scale(.97); box-shadow: 0 2px 10px rgba(0,201,177,.2); }
-    .btn-icon { font-size: 1.3rem; }
+
+    #take-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #take-btn:not(:disabled):active {
+      transform: scale(.97);
+      box-shadow: 0 2px 10px rgba(0, 201, 177, .2);
+    }
+
+    .btn-icon {
+      font-size: 1.3rem;
+    }
 
     /* ── Spinner ─────────────────────────────────────────────── */
     .spinner {
-      width: 20px; height: 20px;
-      border: 3px solid rgba(255,255,255,.3); border-top-color: #fff;
-      border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ── Result card ─────────────────────────────────────────── */
-    #result { display: none; }
-    #result.visible { display: block; }
-    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 14px;
+    #result {
+      display: none;
     }
-    .metric-label { font-size: .7rem; color: var(--text-muted); font-weight: 500; }
-    .metric-value { font-size: 1.9rem; font-weight: 700; line-height: 1.1; margin-top: 4px; }
-    .metric-unit  { font-size: .9rem; font-weight: 400; }
-    .metric-sub   { font-size: .65rem; color: var(--text-muted); margin-top: 4px; }
-    .water-color  { color: var(--water); }
-    .air-color    { color: var(--air); }
-    .result-detail { margin-top: 12px; font-size: .8rem; color: var(--text-muted); line-height: 1.6; }
-    .result-detail span { color: var(--text); font-weight: 500; }
+
+    #result.visible {
+      display: block;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .metric {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .metric-label {
+      font-size: .7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .metric-unit {
+      font-size: .9rem;
+      font-weight: 400;
+    }
+
+    .metric-sub {
+      font-size: .65rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .water-color {
+      color: var(--water);
+    }
+
+    .air-color {
+      color: var(--air);
+    }
+
+    .result-detail {
+      margin-top: 12px;
+      font-size: .8rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .result-detail span {
+      color: var(--text);
+      font-weight: 500;
+    }
 
     /* ── Save buttons ────────────────────────────────────────── */
-    .save-group { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .save-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
 
     #cloud-save-btn {
-      width: 100%; padding: 15px;
-      background: rgba(0,201,177,.13);
-      border: 1.5px solid rgba(0,201,177,.4);
+      width: 100%;
+      padding: 15px;
+      background: rgba(0, 201, 177, .13);
+      border: 1.5px solid rgba(0, 201, 177, .4);
       border-radius: var(--radius);
-      color: var(--accent); font-size: 1rem; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: background .2s; font-family: inherit;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s;
+      font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
-    #cloud-save-btn:not(:disabled):active { background: rgba(0,201,177,.23); }
-    #cloud-save-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    #cloud-save-btn:not(:disabled):active {
+      background: rgba(0, 201, 177, .23);
+    }
+
+    #cloud-save-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
 
     #save-btn {
-      width: 100%; padding: 13px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
+      width: 100%;
+      padding: 13px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .1);
       border-radius: var(--radius);
-      color: var(--text-muted); font-size: .9rem; font-weight: 500;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: background .2s; font-family: inherit;
+      color: var(--text-muted);
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s;
+      font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
-    #save-btn:active { background: rgba(255,255,255,.08); }
+
+    #save-btn:active {
+      background: rgba(255, 255, 255, .08);
+    }
 
     /* ── History section ─────────────────────────────────────── */
-    #history-section { margin-top: 8px; margin-bottom: 24px; }
+    #history-section {
+      margin-top: 8px;
+      margin-bottom: 24px;
+    }
 
     #history-toggle-btn {
-      width: 100%; padding: 16px 18px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); color: var(--text);
-      font-size: .92rem; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; gap: 8px;
-      font-family: inherit; transition: border-color .2s;
+      width: 100%;
+      padding: 16px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: .92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      transition: border-color .2s;
       -webkit-tap-highlight-color: transparent;
     }
-    #history-toggle-btn:active { border-color: var(--accent); }
+
+    #history-toggle-btn:active {
+      border-color: var(--accent);
+    }
+
     #history-count {
-      margin-left: auto; font-size: .72rem;
-      background: rgba(0,201,177,.15); color: var(--accent);
-      border-radius: 20px; padding: 2px 10px;
+      margin-left: auto;
+      font-size: .72rem;
+      background: rgba(0, 201, 177, .15);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 2px 10px;
     }
+
     #history-chevron {
-      font-size: .7rem; color: var(--text-muted);
-      transition: transform .3s ease; flex-shrink: 0;
+      font-size: .7rem;
+      color: var(--text-muted);
+      transition: transform .3s ease;
+      flex-shrink: 0;
     }
-    #history-chevron.open { transform: rotate(180deg); }
+
+    #history-chevron.open {
+      transform: rotate(180deg);
+    }
 
     #history-list {
-      max-height: 0; overflow: hidden;
-      transition: max-height .4s cubic-bezier(.4,0,.2,1);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s cubic-bezier(.4, 0, .2, 1);
     }
-    #history-list.open { max-height: 3000px; }
+
+    #history-list.open {
+      max-height: 3000px;
+    }
 
     .history-empty {
-      text-align: center; color: var(--text-muted);
-      padding: 28px 16px; font-size: .85rem; line-height: 1.6;
+      text-align: center;
+      color: var(--text-muted);
+      padding: 28px 16px;
+      font-size: .85rem;
+      line-height: 1.6;
     }
 
     .history-item {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px 16px; margin-top: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 8px;
     }
+
     .hi-row {
-      display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
     }
-    .hi-station { font-weight: 600; font-size: .9rem; }
-    .hi-cloud { font-size: .62rem; background: rgba(0,201,177,.12); color: var(--accent); border: 1px solid rgba(0,201,177,.2); border-radius: 10px; padding: 2px 8px; margin-left: auto; }
-    .hi-temps { display: flex; gap: 14px; margin-bottom: 6px; }
-    .hi-temp { font-size: 1rem; font-weight: 700; }
-    .hi-meta { font-size: .72rem; color: var(--text-muted); line-height: 1.5; }
+
+    .hi-station {
+      font-weight: 600;
+      font-size: .9rem;
+    }
+
+    .hi-cloud {
+      font-size: .62rem;
+      background: rgba(0, 201, 177, .12);
+      color: var(--accent);
+      border: 1px solid rgba(0, 201, 177, .2);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: auto;
+    }
+
+    .hi-temps {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .hi-temp {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .hi-meta {
+      font-size: .72rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
 
     /* ── Status / Toast ──────────────────────────────────────── */
     #status-bar {
-      text-align: center; font-size: .8rem; color: var(--text-muted);
-      min-height: 1.4em; margin-bottom: 8px;
+      text-align: center;
+      font-size: .8rem;
+      color: var(--text-muted);
+      min-height: 1.4em;
+      margin-bottom: 8px;
     }
+
     #toast {
-      position: fixed; bottom: calc(var(--safe-bot) + 24px); left: 50%;
+      position: fixed;
+      bottom: calc(var(--safe-bot) + 24px);
+      left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 40px; padding: 12px 24px;
-      font-size: .88rem; font-weight: 500;
-      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
-      opacity: 0; pointer-events: none; white-space: nowrap;
-      box-shadow: 0 8px 30px rgba(0,0,0,.4); z-index: 9999;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 12px 24px;
+      font-size: .88rem;
+      font-weight: 500;
+      transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), opacity .3s;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+      z-index: 9999;
     }
-    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
 
     /* ── Map Picker Overlay ──────────────────────────────────── */
     #map-picker {
-      position: fixed; inset: 0; z-index: 500;
-      display: none; flex-direction: column;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      flex-direction: column;
       background: var(--bg);
     }
-    #map-picker.open { display: flex; }
+
+    #map-picker.open {
+      display: flex;
+    }
 
     #mp-header {
       flex-shrink: 0;
       padding: calc(var(--safe-top) + 16px) 20px 14px;
-      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      background: rgba(10, 22, 40, .95);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .mp-title-wrap { flex: 1; }
-    .mp-title {
-      font-size: 1rem; font-weight: 700;
-      background: linear-gradient(135deg, #00c9b1, #00a3ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .mp-sub { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
-    #mp-skip {
-      background: none; border: 1px solid rgba(255,255,255,.12);
-      border-radius: 20px; color: var(--text-muted);
-      font-size: .8rem; font-family: inherit; padding: 7px 14px;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      transition: border-color .2s, color .2s; white-space: nowrap;
-    }
-    #mp-skip:active { color: var(--text); border-color: rgba(255,255,255,.3); }
 
-    #mp-map { flex: 1; }
+    .mp-title-wrap {
+      flex: 1;
+    }
+
+    .mp-title {
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00c9b1, #00a3ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .mp-sub {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    #mp-skip {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-size: .8rem;
+      font-family: inherit;
+      padding: 7px 14px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color .2s, color .2s;
+      white-space: nowrap;
+    }
+
+    #mp-skip:active {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, .3);
+    }
+
+    #mp-map {
+      flex: 1;
+    }
 
     #mp-footer {
       flex-shrink: 0;
       padding: 14px 20px calc(var(--safe-bot) + 14px);
-      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      background: rgba(10, 22, 40, .95);
+      backdrop-filter: blur(14px);
       border-top: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
+
     #mp-coords {
-      flex: 1; font-size: .8rem; color: var(--text-muted); line-height: 1.4;
+      flex: 1;
+      font-size: .8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
     }
-    #mp-coords span { color: var(--text); font-weight: 500; }
+
+    #mp-coords span {
+      color: var(--text);
+      font-weight: 500;
+    }
+
     #mp-confirm {
       padding: 13px 22px;
       background: linear-gradient(135deg, #00c9b1, #0087e0);
-      border: none; border-radius: 12px;
-      color: #fff; font-size: .95rem; font-weight: 700;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
-      box-shadow: 0 4px 16px rgba(0,201,177,.35);
-      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0, 201, 177, .35);
+      transition: opacity .2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    #mp-confirm:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
-    #mp-confirm:not(:disabled):active { opacity: .8; }
+
+    #mp-confirm:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #mp-confirm:not(:disabled):active {
+      opacity: .8;
+    }
 
     /* Sample pin icon */
     .sample-pin {
-      font-size: 28px; line-height: 1;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,.6));
-      animation: pin-drop .25s cubic-bezier(.34,1.56,.64,1);
+      font-size: 28px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .6));
+      animation: pin-drop .25s cubic-bezier(.34, 1.56, .64, 1);
     }
+
     @keyframes pin-drop {
-      from { transform: translateY(-14px) scale(.7); opacity: 0; }
-      to   { transform: translateY(0)     scale(1);   opacity: 1; }
+      from {
+        transform: translateY(-14px) scale(.7);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
     }
 
     /* Leaflet dark attribution */
     .leaflet-control-attribution {
-      background: rgba(10,22,40,.8) !important;
-      color: rgba(0,201,177,.4) !important;
+      background: rgba(10, 22, 40, .8) !important;
+      color: rgba(0, 201, 177, .4) !important;
       font-size: .58rem !important;
     }
-    .leaflet-control-attribution a { color: rgba(0,201,177,.55) !important; }
+
+    .leaflet-control-attribution a {
+      color: rgba(0, 201, 177, .55) !important;
+    }
 
     /* ── Bottom Nav ─────────────────────────────────────────────── */
     #bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
       display: flex;
-      background: rgba(8,18,34,.97); backdrop-filter: blur(16px);
+      background: rgba(8, 18, 34, .97);
+      backdrop-filter: blur(16px);
       border-top: 1px solid var(--border);
       padding-bottom: var(--safe-bot);
     }
+
     .nav-tab {
-      flex: 1; padding: 10px 0;
-      background: none; border: none;
-      color: var(--text-muted); font-family: inherit;
-      font-size: .65rem; font-weight: 500; letter-spacing: .04em;
-      cursor: pointer; display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      transition: color .2s; -webkit-tap-highlight-color: transparent;
+      flex: 1;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: .65rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: color .2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .nav-tab.active { color: var(--accent); }
-    .nav-tab.active svg { stroke: var(--accent); }
-    .nav-tab svg { stroke: var(--text-muted); transition: stroke .2s; }
+
+    .nav-tab.active {
+      color: var(--accent);
+    }
+
+    .nav-tab.active svg {
+      stroke: var(--accent);
+    }
+
+    .nav-tab svg {
+      stroke: var(--text-muted);
+      transition: stroke .2s;
+    }
 
     /* Extra bottom-padding on the scrollable sample content */
-    .app { padding-bottom: calc(68px + var(--safe-bot)); }
+    .app {
+      padding-bottom: calc(68px + var(--safe-bot));
+    }
 
     /* ── Community Map Pane ─────────────────────────────────── */
     #pane-map {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       z-index: 100;
-      display: none; flex-direction: column;
+      display: none;
+      flex-direction: column;
       background: var(--bg);
       padding-bottom: calc(68px + var(--safe-bot));
     }
-    #pane-map.open { display: flex; }
+
+    #pane-map.open {
+      display: flex;
+    }
 
     #pane-map-header {
       flex-shrink: 0;
       padding: calc(var(--safe-top) + 14px) 18px 10px;
-      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      background: rgba(10, 22, 40, .95);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
     }
+
     .pm-title {
-      font-size: .95rem; font-weight: 700;
+      font-size: .95rem;
+      font-weight: 700;
       background: linear-gradient(135deg, #00c9b1, #00a3ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .pm-sub { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+    .pm-sub {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
 
     #pm-controls {
       flex-shrink: 0;
-      display: flex; align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 10px 16px;
-      background: rgba(10,22,40,.85); border-bottom: 1px solid var(--border);
+      background: rgba(10, 22, 40, .85);
+      border-bottom: 1px solid var(--border);
     }
+
     #pm-date-row {
-      flex: 1; display: flex; align-items: center; gap: 6px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+
     #pm-date-row input[type="date"] {
-      flex: 1; padding: 9px 10px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text);
-      font-size: .8rem; font-family: inherit; outline: none;
-      appearance: none; color-scheme: dark;
+      flex: 1;
+      padding: 9px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: .8rem;
+      font-family: inherit;
+      outline: none;
+      appearance: none;
+      color-scheme: dark;
     }
-    #pm-date-row input[type="date"]:focus { border-color: var(--accent); }
-    .pm-date-sep { color: var(--text-muted); font-size: .85rem; }
+
+    #pm-date-row input[type="date"]:focus {
+      border-color: var(--accent);
+    }
+
+    .pm-date-sep {
+      color: var(--text-muted);
+      font-size: .85rem;
+    }
+
     #map-load-btn {
       padding: 9px 16px;
       background: linear-gradient(135deg, #00c9b1, #0087e0);
-      border: none; border-radius: 10px;
-      color: #fff; font-size: .82rem; font-weight: 700;
-      cursor: pointer; font-family: inherit; white-space: nowrap;
-      box-shadow: 0 2px 10px rgba(0,201,177,.3);
-      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0, 201, 177, .3);
+      transition: opacity .2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    #map-load-btn:disabled { opacity: .45; }
-    #map-load-btn:not(:disabled):active { opacity: .8; }
+
+    #map-load-btn:disabled {
+      opacity: .45;
+    }
+
+    #map-load-btn:not(:disabled):active {
+      opacity: .8;
+    }
 
     #pm-legend {
       flex-shrink: 0;
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       padding: 7px 16px;
-      background: rgba(10,22,40,.75);
+      background: rgba(10, 22, 40, .75);
       border-bottom: 1px solid var(--border);
       font-size: .68rem;
     }
-    .leg-item { display: flex; align-items: center; gap: 4px; font-weight: 500; }
-    .leg-pos { color: #ff6666; }
-    .leg-neg { color: #22d96a; }
-    .leg-unk { color: #4285f4; }
-    .pm-count { margin-left: auto; color: var(--text-muted); font-size: .65rem; }
 
-    #shared-map { flex: 1; }
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+
+    .leg-pos {
+      color: #ff6666;
+    }
+
+    .leg-neg {
+      color: #22d96a;
+    }
+
+    .leg-unk {
+      color: #4285f4;
+    }
+
+    .pm-count {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: .65rem;
+    }
+
+    #shared-map {
+      flex: 1;
+    }
 
     /* Marker popup styling */
     .leaflet-popup-content-wrapper {
@@ -572,736 +1210,930 @@
       color: var(--text) !important;
       border: 1px solid var(--border) !important;
       border-radius: 12px !important;
-      box-shadow: 0 8px 28px rgba(0,0,0,.5) !important;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, .5) !important;
       font-family: 'Inter', sans-serif !important;
       font-size: .8rem !important;
     }
-    .leaflet-popup-tip { background: var(--surface2) !important; }
-    .leaflet-popup-close-button { color: var(--text-muted) !important; font-size: 14px !important; }
-    .pm-popup-station { font-weight: 700; font-size: .88rem; margin-bottom: 5px; }
-    .pm-popup-row { color: var(--text-muted); line-height: 1.7; }
-    .pm-popup-row b { color: var(--text); }
-    .pm-popup-cyano-pos { color: #ff6666; font-weight: 600; }
-    .pm-popup-cyano-neg { color: #22d96a; font-weight: 600; }
-    .pm-popup-cyano-unk { color: #4285f4; font-weight: 600; }
+
+    .leaflet-popup-tip {
+      background: var(--surface2) !important;
+    }
+
+    .leaflet-popup-close-button {
+      color: var(--text-muted) !important;
+      font-size: 14px !important;
+    }
+
+    .pm-popup-station {
+      font-weight: 700;
+      font-size: .88rem;
+      margin-bottom: 5px;
+    }
+
+    .pm-popup-row {
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .pm-popup-row b {
+      color: var(--text);
+    }
+
+    .pm-popup-cyano-pos {
+      color: #ff6666;
+      font-weight: 600;
+    }
+
+    .pm-popup-cyano-neg {
+      color: #22d96a;
+      font-weight: 600;
+    }
+
+    .pm-popup-cyano-unk {
+      color: #4285f4;
+      font-weight: 600;
+    }
 
     /* ── Edit Panel ───────────────────────────────────────────────── */
     #edit-panel {
-      position: fixed; inset: 0; z-index: 600;
-      background: var(--bg); display: none; flex-direction: column;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
       transform: translateY(100%);
-      transition: transform .35s cubic-bezier(.32,1,.6,1);
+      transition: transform .35s cubic-bezier(.32, 1, .6, 1);
     }
-    #edit-panel.open { display: flex; transform: translateY(0); }
+
+    #edit-panel.open {
+      display: flex;
+      transform: translateY(0);
+    }
 
     #edit-header {
       flex-shrink: 0;
       padding: calc(var(--safe-top) + 16px) 20px 14px;
-      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      background: rgba(10, 22, 40, .95);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .edit-title-wrap { flex: 1; }
+
+    .edit-title-wrap {
+      flex: 1;
+    }
+
     .edit-title {
-      font-size: 1rem; font-weight: 700;
+      font-size: 1rem;
+      font-weight: 700;
       background: linear-gradient(135deg, #00c9b1, #00a3ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .edit-sub { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .edit-sub {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     #edit-close {
-      background: none; border: 1px solid rgba(255,255,255,.12);
-      border-radius: 20px; color: var(--text-muted);
-      font-size: .8rem; font-family: inherit; padding: 7px 14px;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      background: none;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-size: .8rem;
+      font-family: inherit;
+      padding: 7px 14px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
       transition: border-color .2s, color .2s;
     }
-    #edit-close:active { color: var(--text); border-color: rgba(255,255,255,.3); }
+
+    #edit-close:active {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, .3);
+    }
 
     #edit-body {
-      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 20px;
     }
 
-    .edit-field { margin-bottom: 18px; }
+    .edit-field {
+      margin-bottom: 18px;
+    }
+
     .edit-label {
-      font-size: .72rem; font-weight: 600; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
+
     .edit-input {
-      width: 100%; padding: 13px 14px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text);
-      font-size: .95rem; font-family: inherit;
-      outline: none; transition: border-color .2s; appearance: none;
+      width: 100%;
+      padding: 13px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: .95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
     }
-    .edit-input:focus { border-color: var(--accent); }
+
+    .edit-input:focus {
+      border-color: var(--accent);
+    }
+
     .edit-input[readonly] {
-      opacity: .55; cursor: default;
-      background: rgba(255,255,255,.03);
+      opacity: .55;
+      cursor: default;
+      background: rgba(255, 255, 255, .03);
     }
-    .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .edit-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
     /* Location picker row */
     .edit-loc-row {
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       padding: 12px 14px;
-      background: var(--surface2); border: 1px solid var(--border);
+      background: var(--surface2);
+      border: 1px solid var(--border);
       border-radius: 12px;
     }
+
     .edit-loc-display {
-      flex: 1; font-size: .88rem; color: var(--text-muted);
+      flex: 1;
+      font-size: .88rem;
+      color: var(--text-muted);
       font-family: 'Inter', sans-serif;
     }
-    .edit-loc-display.has-pin { color: var(--text); font-weight: 500; }
-    .edit-loc-btn {
-      background: rgba(0,201,177,.12); border: 1px solid rgba(0,201,177,.3);
-      border-radius: 10px; color: var(--accent);
-      font-size: .8rem; font-weight: 600; font-family: inherit;
-      padding: 7px 12px; cursor: pointer; white-space: nowrap;
-      transition: background .2s; -webkit-tap-highlight-color: transparent;
+
+    .edit-loc-display.has-pin {
+      color: var(--text);
+      font-weight: 500;
     }
-    .edit-loc-btn:active { background: rgba(0,201,177,.22); }
+
+    .edit-loc-btn {
+      background: rgba(0, 201, 177, .12);
+      border: 1px solid rgba(0, 201, 177, .3);
+      border-radius: 10px;
+      color: var(--accent);
+      font-size: .8rem;
+      font-weight: 600;
+      font-family: inherit;
+      padding: 7px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .edit-loc-btn:active {
+      background: rgba(0, 201, 177, .22);
+    }
 
     /* Cyanobacteria toggle */
     .cyano-toggle {
-      display: flex; gap: 6px;
+      display: flex;
+      gap: 6px;
     }
+
     .cyano-btn {
-      flex: 1; padding: 12px 8px;
-      background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 12px; color: var(--text-muted);
-      font-size: .85rem; font-weight: 500; font-family: inherit;
-      cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+      flex: 1;
+      padding: 12px 8px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: .85rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, color .2s;
       -webkit-tap-highlight-color: transparent;
     }
-    .cyano-btn.active-null  { border-color: rgba(136,152,184,.5); color: var(--text); background: rgba(136,152,184,.12); }
-    .cyano-btn.active-yes   { border-color: #ff5555; color: #ff7070; background: rgba(255,85,85,.12); }
-    .cyano-btn.active-no    { border-color: var(--accent); color: var(--accent); background: rgba(0,201,177,.12); }
+
+    .cyano-btn.active-null {
+      border-color: rgba(136, 152, 184, .5);
+      color: var(--text);
+      background: rgba(136, 152, 184, .12);
+    }
+
+    .cyano-btn.active-yes {
+      border-color: #ff5555;
+      color: #ff7070;
+      background: rgba(255, 85, 85, .12);
+    }
+
+    .cyano-btn.active-no {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 201, 177, .12);
+    }
 
     /* Cyano badge in history */
-    .hi-cyano-yes { font-size: .62rem; background: rgba(255,85,85,.15); color: #ff7070; border: 1px solid rgba(255,85,85,.3); border-radius: 10px; padding: 2px 8px; margin-left: 4px; }
-    .hi-cyano-no  { font-size: .62rem; background: rgba(0,201,177,.12); color: var(--accent); border: 1px solid rgba(0,201,177,.2); border-radius: 10px; padding: 2px 8px; margin-left: 4px; }
+    .hi-cyano-yes {
+      font-size: .62rem;
+      background: rgba(255, 85, 85, .15);
+      color: #ff7070;
+      border: 1px solid rgba(255, 85, 85, .3);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: 4px;
+    }
+
+    .hi-cyano-no {
+      font-size: .62rem;
+      background: rgba(0, 201, 177, .12);
+      color: var(--accent);
+      border: 1px solid rgba(0, 201, 177, .2);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: 4px;
+    }
 
     #edit-footer {
       flex-shrink: 0;
       padding: 14px 20px calc(var(--safe-bot) + 14px);
-      background: rgba(10,22,40,.95); backdrop-filter: blur(14px);
+      background: rgba(10, 22, 40, .95);
+      backdrop-filter: blur(14px);
       border-top: 1px solid var(--border);
     }
+
     #edit-save {
-      width: 100%; padding: 15px;
+      width: 100%;
+      padding: 15px;
       background: linear-gradient(135deg, #00c9b1, #0087e0);
-      border: none; border-radius: var(--radius);
-      color: #fff; font-size: 1rem; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 16px rgba(0,201,177,.35);
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: opacity .2s; -webkit-tap-highlight-color: transparent;
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 16px rgba(0, 201, 177, .35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .2s;
+      -webkit-tap-highlight-color: transparent;
     }
-    #edit-save:disabled { opacity: .45; cursor: not-allowed; }
-    #edit-save:not(:disabled):active { opacity: .85; }
+
+    #edit-save:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    #edit-save:not(:disabled):active {
+      opacity: .85;
+    }
   </style>
 </head>
+
 <body>
 
-<!-- ── Map Picker Overlay ────────────────────────────────────── -->
-<div id="map-picker">
-  <div id="mp-header">
-    <div class="mp-title-wrap">
-      <div class="mp-title">📍 Pin sample location</div>
-      <div class="mp-sub">Tap the map exactly where you took the sample</div>
+  <!-- ── Map Picker Overlay ────────────────────────────────────── -->
+  <div id="map-picker">
+    <div id="mp-header">
+      <div class="mp-title-wrap">
+        <div class="mp-title">📍 Pin sample location</div>
+        <div class="mp-sub">Tap the map exactly where you took the sample</div>
+      </div>
+      <button id="mp-skip">Skip</button>
     </div>
-    <button id="mp-skip">Skip</button>
-  </div>
-  <div id="mp-map"></div>
-  <div id="mp-footer">
-    <div id="mp-coords">Tap the map to pin a location</div>
-    <button id="mp-confirm" disabled>Confirm</button>
-  </div>
-</div>
-
-<!-- ── Auth Overlay ──────────────────────────────────────────── -->
-<div id="auth-overlay">
-  <div class="auth-card">
-    <img class="auth-logo" src="Neosens.png" alt="Neosens logo" />
-    <div class="auth-title">Water Sampler</div>
-    <p class="auth-sub">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login">Log In</button>
-      <button class="auth-tab" id="tab-register">Register</button>
+    <div id="mp-map"></div>
+    <div id="mp-footer">
+      <div id="mp-coords">Tap the map to pin a location</div>
+      <button id="mp-confirm" disabled>Confirm</button>
     </div>
-
-    <div id="auth-name-wrap" style="display:none">
-      <input id="auth-name" type="text" class="auth-input" placeholder="Full name (e.g. Thierry Robert-Nicoud)" autocomplete="name" />
-    </div>
-    <input id="auth-email"    type="email"    class="auth-input" placeholder="Email address"  autocomplete="email" />
-    <input id="auth-password" type="password" class="auth-input" placeholder="Password"        autocomplete="current-password" />
-
-    <p id="auth-error" class="auth-error"></p>
-    <button id="auth-submit" class="auth-btn">Log In</button>
-  </div>
-</div>
-
-<!-- ── Edit Panel ─────────────────────────────────────────────── -->
-<div id="edit-panel">
-  <div id="edit-header">
-    <div class="edit-title-wrap">
-      <div class="edit-title">✏️ Edit Sampling</div>
-      <div class="edit-sub" id="edit-sub">Loading…</div>
-    </div>
-    <button id="edit-close">Cancel</button>
   </div>
 
-  <div id="edit-body">
-    <!-- Read-only info -->
-    <div class="edit-field">
-      <div class="edit-label">Measurement Station</div>
-      <input id="ef-station" class="edit-input" type="text" readonly />
+  <!-- ── Auth Overlay ──────────────────────────────────────────── -->
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <img class="auth-logo" src="Neosens.png" alt="Neosens logo" />
+      <div class="auth-title">Water Sampler</div>
+      <p class="auth-sub">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">Log In</button>
+        <button class="auth-tab" id="tab-register">Register</button>
+      </div>
+
+      <div id="auth-name-wrap" style="display:none">
+        <input id="auth-name" type="text" class="auth-input" placeholder="Full name (e.g. Thierry Robert-Nicoud)"
+          autocomplete="name" />
+      </div>
+      <input id="auth-email" type="email" class="auth-input" placeholder="Email address" autocomplete="email" />
+      <input id="auth-password" type="password" class="auth-input" placeholder="Password"
+        autocomplete="current-password" />
+
+      <p id="auth-error" class="auth-error"></p>
+      <button id="auth-submit" class="auth-btn">Log In</button>
     </div>
-    <div class="edit-field">
-      <div class="edit-label">Sampled at</div>
-      <input id="ef-date" class="edit-input" type="text" readonly />
+  </div>
+
+  <!-- ── Edit Panel ─────────────────────────────────────────────── -->
+  <div id="edit-panel">
+    <div id="edit-header">
+      <div class="edit-title-wrap">
+        <div class="edit-title">✏️ Edit Sampling</div>
+        <div class="edit-sub" id="edit-sub">Loading…</div>
+      </div>
+      <button id="edit-close">Cancel</button>
     </div>
 
-    <!-- Editable fields -->
-    <div class="edit-field">
-      <div class="edit-label">Sampler name</div>
-      <input id="ef-sampler" class="edit-input" type="text" placeholder="Sampler name" />
-    </div>
-    <div class="edit-row">
+    <div id="edit-body">
+      <!-- Read-only info -->
       <div class="edit-field">
-        <div class="edit-label">Volume (ml)</div>
-        <input id="ef-volume" class="edit-input" type="number" min="1" inputmode="numeric" />
+        <div class="edit-label">Measurement Station</div>
+        <input id="ef-station" class="edit-input" type="text" readonly />
       </div>
       <div class="edit-field">
-        <div class="edit-label">Water Temp (°C)</div>
-        <input id="ef-water" class="edit-input" type="number" step="0.01" inputmode="decimal" />
+        <div class="edit-label">Sampled at</div>
+        <input id="ef-date" class="edit-input" type="text" readonly />
       </div>
-    </div>
-    <div class="edit-row">
+
+      <!-- Editable fields -->
       <div class="edit-field">
-        <div class="edit-label">Air Temp (°C)</div>
-        <input id="ef-air" class="edit-input" type="number" step="0.1" inputmode="decimal" placeholder="N/A" />
+        <div class="edit-label">Sampler name</div>
+        <input id="ef-sampler" class="edit-input" type="text" placeholder="Sampler name" />
       </div>
-      <div class="edit-field">
-        <div class="edit-label">SMN Station</div>
-        <input id="ef-smn" class="edit-input" type="text" readonly />
-      </div>
-    </div>
-    <div class="edit-field">
-      <div class="edit-label">Sample Location</div>
-      <div class="edit-loc-row">
-        <div class="edit-loc-display" id="ef-loc-display">not pinned</div>
-        <button class="edit-loc-btn" id="ef-loc-btn">📍 Change</button>
-      </div>
-    </div>
-
-    <!-- Cyanobacteria -->
-    <div class="edit-field">
-      <div class="edit-label">Cyanobacteria</div>
-      <div class="cyano-toggle">
-        <button class="cyano-btn" id="cyano-null" data-cyano="null">🔬 Not analyzed</button>
-        <button class="cyano-btn" id="cyano-yes"  data-cyano="yes">⚠️ Yes</button>
-        <button class="cyano-btn" id="cyano-no"   data-cyano="no">✅ No</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="edit-footer">
-    <button id="edit-save">
-      <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      Save changes
-    </button>
-  </div>
-</div>
-
-<!-- ── Main App (hidden until logged in) ─────────────────────── -->
-<div class="app" id="main-app" style="display:none">
-
-  <header>
-    <div class="header-top">
-      <div class="user-badge">
-        <div class="user-dot"></div>
-        <span id="user-name">—</span>
-        <button id="sign-out-btn" title="Sign out">✕</button>
-      </div>
-    </div>
-    <img class="logo" src="Neosens.png" alt="Neosens logo" />
-    <h1>Water Sampler</h1>
-    <p class="subtitle">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
-  </header>
-
-  <!-- Station picker -->
-  <div class="card" id="picker-card">
-    <div class="card-label">📍 Choose station</div>
-    <div class="search-wrap">
-      <svg class="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-      <input id="search" type="search" placeholder="Search river, lake, or town…" autocomplete="off" />
-    </div>
-    <ul id="station-list"><li class="empty-msg">Loading stations…</li></ul>
-  </div>
-
-  <!-- Sampler & volume -->
-  <div class="card" id="meta-card">
-    <div class="card-label">👤 Sampler &amp; volume</div>
-    <div class="sampler-chip">
-      <span class="sampler-chip-icon">👤</span>
-      <span id="sampler-chip">—</span>
-    </div>
-    <div class="volume-wrap">
-      <span class="volume-label">Sample volume</span>
-      <input id="volume" type="number" min="1" max="10000" step="1" placeholder="e.g. 500" inputmode="numeric" />
-      <span class="volume-unit">ml</span>
-    </div>
-  </div>
-
-  <div id="status-bar"></div>
-
-  <button id="take-btn" disabled>
-    <span class="btn-icon">💧</span>
-    <span id="btn-label">Take Sample</span>
-  </button>
-
-  <!-- Result -->
-  <div class="card" id="result">
-    <div class="card-label">📊 Latest reading</div>
-
-    <div class="result-grid">
-      <div class="metric">
-        <div class="metric-label">🌊 Water Temp</div>
-        <div class="metric-value water-color">
-          <span id="r-water">–</span><span class="metric-unit">°C</span>
+      <div class="edit-row">
+        <div class="edit-field">
+          <div class="edit-label">Volume (ml)</div>
+          <input id="ef-volume" class="edit-input" type="number" min="1" inputmode="numeric" />
         </div>
-        <div class="metric-sub" id="r-water-time"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">🌡 Air Temp (SMN)</div>
-        <div class="metric-value air-color">
-          <span id="r-air">–</span><span class="metric-unit">°C</span>
+        <div class="edit-field">
+          <div class="edit-label">Water Temp (°C)</div>
+          <input id="ef-water" class="edit-input" type="number" step="0.01" inputmode="decimal" />
         </div>
-        <div class="metric-sub" id="r-air-station"></div>
+      </div>
+      <div class="edit-row">
+        <div class="edit-field">
+          <div class="edit-label">Air Temp (°C)</div>
+          <input id="ef-air" class="edit-input" type="number" step="0.1" inputmode="decimal" placeholder="N/A" />
+        </div>
+        <div class="edit-field">
+          <div class="edit-label">SMN Station</div>
+          <input id="ef-smn" class="edit-input" type="text" readonly />
+        </div>
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Sample Location</div>
+        <div class="edit-loc-row">
+          <div class="edit-loc-display" id="ef-loc-display">not pinned</div>
+          <button class="edit-loc-btn" id="ef-loc-btn">📍 Change</button>
+        </div>
+      </div>
+
+      <!-- Cyanobacteria -->
+      <div class="edit-field">
+        <div class="edit-label">Cyanobacteria</div>
+        <div class="cyano-toggle">
+          <button class="cyano-btn" id="cyano-null" data-cyano="null">Not analyzed</button>
+          <button class="cyano-btn" id="cyano-yes" data-cyano="yes">Yes</button>
+          <button class="cyano-btn" id="cyano-no" data-cyano="no">No</button>
+        </div>
       </div>
     </div>
 
-    <div class="result-detail" id="r-detail"></div>
-
-    <div class="save-group">
-      <button id="cloud-save-btn">
-        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 12v9m0-9-3.5 3.5M12 12l3.5 3.5M20.4 15.3A5 5 0 0 0 18 6h-1.3A8 8 0 1 0 4 15.3"/></svg>
-        Save to My Account
-      </button>
-      <button id="save-btn">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 12-4-4m4 4 4-4M4 20h16"/></svg>
-        Download .txt file
+    <div id="edit-footer">
+      <button id="edit-save">
+        <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+        Save changes
       </button>
     </div>
   </div>
 
-  <!-- My Samplings history -->
-  <div id="history-section">
-    <button id="history-toggle-btn">
-      📋 My Samplings
-      <span id="history-count"></span>
-      <span id="history-chevron">▼</span>
-    </button>
-    <div id="history-list"></div>
-  </div>
+  <!-- ── Main App (hidden until logged in) ─────────────────────── -->
+  <div class="app" id="main-app" style="display:none">
 
-  <!-- ── Community Map Pane ───────────────────────────────────────── -->
-  <div id="pane-map">
-    <div id="pane-map-header">
-      <div class="pm-title-wrap">
-        <div class="pm-title">🗺️ Community Map</div>
-        <div class="pm-sub">All samplings across Switzerland</div>
+    <header>
+      <div class="header-top">
+        <div class="user-badge">
+          <div class="user-dot"></div>
+          <span id="user-name">—</span>
+          <button id="sign-out-btn" title="Sign out">✕</button>
+        </div>
+      </div>
+      <img class="logo" src="Neosens.png" alt="Neosens logo" />
+      <h1>Water Sampler</h1>
+      <p class="subtitle">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
+    </header>
+
+    <!-- Station picker -->
+    <div class="card" id="picker-card">
+      <div class="card-label">📍 Choose station</div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input id="search" type="search" placeholder="Search river, lake, or town…" autocomplete="off" />
+      </div>
+      <ul id="station-list">
+        <li class="empty-msg">Loading stations…</li>
+      </ul>
+    </div>
+
+    <!-- Sampler & volume -->
+    <div class="card" id="meta-card">
+      <div class="card-label">👤 Sampler &amp; volume</div>
+      <div class="sampler-chip">
+        <span class="sampler-chip-icon">👤</span>
+        <span id="sampler-chip">—</span>
+      </div>
+      <div class="volume-wrap">
+        <span class="volume-label">Sample volume</span>
+        <input id="volume" type="number" min="1" max="10000" step="1" placeholder="e.g. 500" inputmode="numeric" />
+        <span class="volume-unit">ml</span>
       </div>
     </div>
 
-    <div id="pm-controls">
-      <div id="pm-date-row">
-        <input type="date" id="map-from" />
-        <span class="pm-date-sep">–</span>
-        <input type="date" id="map-to" />
+    <div id="status-bar"></div>
+
+    <button id="take-btn" disabled>
+      <span class="btn-icon">💧</span>
+      <span id="btn-label">Take Sample</span>
+    </button>
+
+    <!-- Result -->
+    <div class="card" id="result">
+      <div class="card-label">📊 Latest reading</div>
+
+      <div class="result-grid">
+        <div class="metric">
+          <div class="metric-label">🌊 Water Temp</div>
+          <div class="metric-value water-color">
+            <span id="r-water">–</span><span class="metric-unit">°C</span>
+          </div>
+          <div class="metric-sub" id="r-water-time"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">🌡 Air Temp (SMN)</div>
+          <div class="metric-value air-color">
+            <span id="r-air">–</span><span class="metric-unit">°C</span>
+          </div>
+          <div class="metric-sub" id="r-air-station"></div>
+        </div>
       </div>
-      <button id="map-load-btn">📡 Load</button>
+
+      <div class="result-detail" id="r-detail"></div>
+
+      <div class="save-group">
+        <button id="cloud-save-btn">
+          <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 12v9m0-9-3.5 3.5M12 12l3.5 3.5M20.4 15.3A5 5 0 0 0 18 6h-1.3A8 8 0 1 0 4 15.3" />
+          </svg>
+          Save to My Account
+        </button>
+        <button id="save-btn">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 16V4m0 12-4-4m4 4 4-4M4 20h16" />
+          </svg>
+          Download .txt file
+        </button>
+      </div>
     </div>
 
-    <div id="pm-legend">
-      <span class="leg-item leg-pos">&#9679; Cyano+</span>
-      <span class="leg-item leg-neg">&#9679; Cyano−</span>
-      <span class="leg-item leg-unk">&#9679; Not analyzed</span>
-      <span id="pm-count" class="pm-count"></span>
+    <!-- My Samplings history -->
+    <div id="history-section">
+      <button id="history-toggle-btn">
+        📋 My Samplings
+        <span id="history-count"></span>
+        <span id="history-chevron">▼</span>
+      </button>
+      <div id="history-list"></div>
     </div>
 
-    <div id="shared-map"></div>
-  </div>
+    <!-- ── Community Map Pane ───────────────────────────────────────── -->
+    <div id="pane-map">
+      <div id="pane-map-header">
+        <div class="pm-title-wrap">
+          <div class="pm-title">🗺️ Community Map</div>
+          <div class="pm-sub">All samplings across Switzerland</div>
+        </div>
+      </div>
 
-  <!-- ── Bottom Nav ───────────────────────────────────────────────── -->
-  <nav id="bottom-nav">
-    <button class="nav-tab active" id="nav-sample">
-      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-5-6H9z"/><path d="M14 3v5a1 1 0 0 0 1 1h5M9 12h6M9 16h4"/></svg>
-      <span>Sample</span>
-    </button>
-    <button class="nav-tab" id="nav-map">
-      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
-      <span>Map</span>
-    </button>
-  </nav>
+      <div id="pm-controls">
+        <div id="pm-date-row">
+          <input type="date" id="map-from" />
+          <span class="pm-date-sep">–</span>
+          <input type="date" id="map-to" />
+        </div>
+        <button id="map-load-btn">📡 Load</button>
+      </div>
 
-</div><!-- .app -->
+      <div id="pm-legend">
+        <span class="leg-item leg-pos">&#9679; Cyano+</span>
+        <span class="leg-item leg-neg">&#9679; Cyano−</span>
+        <span class="leg-item leg-unk">&#9679; Not analyzed</span>
+        <span id="pm-count" class="pm-count"></span>
+      </div>
 
-<div id="toast"></div>
+      <div id="shared-map"></div>
+    </div>
 
-<script type="module">
-import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
-import { getAuth, createUserWithEmailAndPassword,
-         signInWithEmailAndPassword, updateProfile,
-         onAuthStateChanged, signOut }            from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-import { getFirestore, collection, addDoc,
-         updateDoc, doc, collectionGroup,
-         query, orderBy, where, getDocs }         from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-// NOTE: For collectionGroup to work, update your Firestore rules to:
-// match /{path=**}/samplings/{doc} { allow read: if request.auth != null; }
-// match /users/{uid}/samplings/{doc} { allow write: if request.auth != null && request.auth.uid == uid; }
+    <!-- ── Bottom Nav ───────────────────────────────────────────────── -->
+    <nav id="bottom-nav">
+      <button class="nav-tab active" id="nav-sample">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-5-6H9z" />
+          <path d="M14 3v5a1 1 0 0 0 1 1h5M9 12h6M9 16h4" />
+        </svg>
+        <span>Sample</span>
+      </button>
+      <button class="nav-tab" id="nav-map">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" />
+          <path d="M9 3v15M15 6v15" />
+        </svg>
+        <span>Map</span>
+      </button>
+    </nav>
 
-// ── Firebase ──────────────────────────────────────────────────
-const fbApp = initializeApp({
-  apiKey:            "AIzaSyCxh00P54VLoaJ3lViDG16TDtuxruFwwvc",
-  authDomain:        "water-sampler.firebaseapp.com",
-  projectId:         "water-sampler",
-  storageBucket:     "water-sampler.firebasestorage.app",
-  messagingSenderId: "839755584203",
-  appId:             "1:839755584203:web:c27034900276708899814e"
-});
-const auth = getAuth(fbApp);
-const db   = getFirestore(fbApp);
+  </div><!-- .app -->
 
-// ── API config ────────────────────────────────────────────────
-const HYDRO_BASE = 'https://api.existenz.ch/apiv1/hydro';
-const SMN_BASE   = 'https://api.existenz.ch/apiv1/smn';
+  <div id="toast"></div>
 
-// ── State ─────────────────────────────────────────────────────
-let currentUser  = null;
-let allStations  = [];
-let smnLocations = {};
-let selected     = null;
-let samplerName  = null;
-let lastResult   = null;
-let userPos      = null;
-let historyOpen  = false;
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+    import {
+      getAuth, createUserWithEmailAndPassword,
+      signInWithEmailAndPassword, updateProfile,
+      onAuthStateChanged, signOut
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import {
+      getFirestore, collection, addDoc,
+      updateDoc, doc, collectionGroup,
+      query, orderBy, where, getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+    // NOTE: For collectionGroup to work, update your Firestore rules to:
+    // match /{path=**}/samplings/{doc} { allow read: if request.auth != null; }
+    // match /users/{uid}/samplings/{doc} { allow write: if request.auth != null && request.auth.uid == uid; }
 
-// ── Utilities ─────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-function setStatus(msg) { $('status-bar').textContent = msg; }
-
-function showToast(msg, ms = 2800) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), ms);
-}
-
-function formatTs(ts) {
-  return new Date(ts * 1000).toLocaleString('de-CH', {
-    day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
-  });
-}
-
-function formatIso(iso) {
-  return new Date(iso).toLocaleString('de-CH', {
-    day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
-  });
-}
-
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371, r = Math.PI / 180;
-  const dLat = (lat2-lat1)*r, dLon = (lon2-lon1)*r;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function sanitize(s) { return s.replace(/[<>:"/\\|?* ]/g, '_'); }
-
-function abbreviateName(name) {
-  if (!name) return '—';
-  const parts = name.trim().split(' ').filter(Boolean);
-  if (parts.length === 1) return parts[0].length > 16 ? parts[0].slice(0,15)+'…' : parts[0];
-  return `${parts[0]} ${parts[parts.length-1][0]}.`;
-}
-
-function getUserPosition() {
-  return new Promise(resolve => {
-    if (!navigator.geolocation) return resolve(null);
-    navigator.geolocation.getCurrentPosition(
-      p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy) }),
-      ()  => resolve(null),
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  });
-}
-
-// ── Auth UI ───────────────────────────────────────────────────
-let authMode = 'login';
-
-function setAuthMode(mode) {
-  authMode = mode;
-  $('tab-login').classList.toggle('active', mode === 'login');
-  $('tab-register').classList.toggle('active', mode === 'register');
-  $('auth-name-wrap').style.display = mode === 'register' ? '' : 'none';
-  $('auth-password').autocomplete  = mode === 'login' ? 'current-password' : 'new-password';
-  $('auth-submit').textContent = mode === 'login' ? 'Log In' : 'Create Account';
-  $('auth-error').textContent = '';
-}
-
-function friendlyError(code) {
-  return ({
-    'auth/user-not-found':       'No account found with that email.',
-    'auth/wrong-password':       'Incorrect password.',
-    'auth/invalid-credential':   'Incorrect email or password.',
-    'auth/email-already-in-use': 'That email is already registered.',
-    'auth/weak-password':        'Password must be at least 6 characters.',
-    'auth/invalid-email':        'Please enter a valid email address.',
-    'auth/too-many-requests':    'Too many attempts — please wait and try again.',
-  })[code] || 'Authentication error. Please try again.';
-}
-
-async function handleAuthSubmit() {
-  const btn   = $('auth-submit');
-  const email = $('auth-email').value.trim();
-  const pwd   = $('auth-password').value;
-  $('auth-error').textContent = '';
-
-  if (!email || !pwd) {
-    $('auth-error').textContent = 'Please fill in all fields.';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Please wait…';
-
-  try {
-    if (authMode === 'register') {
-      const name = $('auth-name').value.trim();
-      if (!name) { $('auth-error').textContent = 'Please enter your name.'; return; }
-      const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-      await updateProfile(cred.user, { displayName: name });
-      // onAuthStateChanged fires and handles the rest
-    } else {
-      await signInWithEmailAndPassword(auth, email, pwd);
-    }
-  } catch (err) {
-    $('auth-error').textContent = friendlyError(err.code);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = authMode === 'login' ? 'Log In' : 'Create Account';
-  }
-}
-
-// ── Auth state ────────────────────────────────────────────────
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if (user) {
-    $('auth-overlay').style.display = 'none';
-    $('main-app').style.display     = '';
-    samplerName = user.displayName || '';
-    $('user-name').textContent    = abbreviateName(user.displayName || user.email);
-    $('sampler-chip').textContent = samplerName || '—';
-    updateTakeBtn();
-    loadHistory();
-  } else {
-    $('auth-overlay').style.display = '';
-    $('main-app').style.display     = 'none';
-    samplerName = null;
-  }
-});
-
-// ── Take button ───────────────────────────────────────────────
-function updateTakeBtn() {
-  $('take-btn').disabled = !selected;
-}
-
-// ── API calls ─────────────────────────────────────────────────
-async function apiFetch(url, params = {}) {
-  const u = new URL(url);
-  Object.entries(params).forEach(([k,v]) => u.searchParams.set(k,v));
-  const r = await fetch(u, { headers: { Accept: 'application/json' } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
-
-async function loadStations() {
-  const [locData, tempData] = await Promise.all([
-    apiFetch(`${HYDRO_BASE}/locations`),
-    apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' })
-  ]);
-  const locs = locData.payload;
-  const temps = {};
-  for (const e of tempData.payload) {
-    if (e.par === 'temperature') temps[e.loc] = { value: e.val, timestamp: e.timestamp };
-  }
-  const stations = [];
-  for (const [id, temp] of Object.entries(temps)) {
-    const d = locs[id]?.details;
-    if (!d || !d.lat || !d.lon) continue;
-    stations.push({
-      id, name: d.name || id,
-      water_body: d['water-body-name'] || '',
-      body_type:  d['water-body-type'] || '',
-      lat: d.lat, lon: d.lon,
-      value: temp.value, timestamp: temp.timestamp
+    // ── Firebase ──────────────────────────────────────────────────
+    const fbApp = initializeApp({
+      apiKey: "AIzaSyCxh00P54VLoaJ3lViDG16TDtuxruFwwvc",
+      authDomain: "water-sampler.firebaseapp.com",
+      projectId: "water-sampler",
+      storageBucket: "water-sampler.firebasestorage.app",
+      messagingSenderId: "839755584203",
+      appId: "1:839755584203:web:c27034900276708899814e"
     });
-  }
-  stations.sort((a,b) => a.name.localeCompare(b.name));
-  return stations;
-}
+    const auth = getAuth(fbApp);
+    const db = getFirestore(fbApp);
 
-async function loadSmnLocations() {
-  const data = await apiFetch(`${SMN_BASE}/locations`);
-  const result = {};
-  for (const [k, v] of Object.entries(data.payload)) {
-    const d = v.details || {};
-    if (d.lat && d.lon) result[k] = { name: d.name||k, canton: d.canton||'', lat: d.lat, lon: d.lon };
-  }
-  return result;
-}
+    // ── API config ────────────────────────────────────────────────
+    const HYDRO_BASE = 'https://api.existenz.ch/apiv1/hydro';
+    const SMN_BASE = 'https://api.existenz.ch/apiv1/smn';
 
-async function fetchAirTemp(smnId) {
-  const data = await apiFetch(`${SMN_BASE}/latest`, { locations: smnId, parameters: 'tt' });
-  return data.payload.find(e => e.par === 'tt') || null;
-}
+    // ── State ─────────────────────────────────────────────────────
+    let currentUser = null;
+    let allStations = [];
+    let smnLocations = {};
+    let selected = null;
+    let samplerName = null;
+    let lastResult = null;
+    let userPos = null;
+    let historyOpen = false;
 
-function findNearestSmn(lat, lon) {
-  let bestId = null, bestLoc = null, bestDist = Infinity;
-  for (const [id, loc] of Object.entries(smnLocations)) {
-    const d = haversine(lat, lon, loc.lat, loc.lon);
-    if (d < bestDist) { bestDist = d; bestId = id; bestLoc = loc; }
-  }
-  return { id: bestId, loc: bestLoc, dist: bestDist };
-}
+    // ── Utilities ─────────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
 
-// ── Render station list ───────────────────────────────────────
-function renderList(q = '') {
-  const ql = q.toLowerCase().trim();
-  let filtered = ql
-    ? allStations.filter(s => s.name.toLowerCase().includes(ql) || s.water_body.toLowerCase().includes(ql))
-    : allStations.slice();
+    function setStatus(msg) { $('status-bar').textContent = msg; }
 
-  if (userPos) {
-    for (const s of filtered) s._dist = haversine(userPos.lat, userPos.lon, s.lat, s.lon);
-    if (!ql) filtered.sort((a,b) => a._dist - b._dist);
-  }
+    function showToast(msg, ms = 2800) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), ms);
+    }
 
-  const ul = $('station-list');
-  ul.innerHTML = '';
-  if (!filtered.length) { ul.innerHTML = '<li class="empty-msg">No stations found</li>'; return; }
+    function formatTs(ts) {
+      return new Date(ts * 1000).toLocaleString('de-CH', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
 
-  for (const s of filtered) {
-    const li = document.createElement('li');
-    li.className = 'station-item' + (selected?.id === s.id ? ' selected' : '');
-    li.dataset.id = s.id;
-    const tag = s.body_type === 'lake'
-      ? `<span class="station-tag tag-lake">lake</span>`
-      : `<span class="station-tag tag-river">river</span>`;
-    const distBadge = (userPos && s._dist != null)
-      ? `<span class="station-dist">📍 ${s._dist < 1 ? (s._dist*1000).toFixed(0)+' m' : s._dist.toFixed(1)+' km'}</span>`
-      : '';
-    li.innerHTML = `
+    function formatIso(iso) {
+      return new Date(iso).toLocaleString('de-CH', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371, r = Math.PI / 180;
+      const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function sanitize(s) { return s.replace(/[<>:"/\\|?* ]/g, '_'); }
+
+    function abbreviateName(name) {
+      if (!name) return '—';
+      const parts = name.trim().split(' ').filter(Boolean);
+      if (parts.length === 1) return parts[0].length > 16 ? parts[0].slice(0, 15) + '…' : parts[0];
+      return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+    }
+
+    function getUserPosition() {
+      return new Promise(resolve => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy) }),
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      });
+    }
+
+    // ── Auth UI ───────────────────────────────────────────────────
+    let authMode = 'login';
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      $('tab-login').classList.toggle('active', mode === 'login');
+      $('tab-register').classList.toggle('active', mode === 'register');
+      $('auth-name-wrap').style.display = mode === 'register' ? '' : 'none';
+      $('auth-password').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+      $('auth-submit').textContent = mode === 'login' ? 'Log In' : 'Create Account';
+      $('auth-error').textContent = '';
+    }
+
+    function friendlyError(code) {
+      return ({
+        'auth/user-not-found': 'No account found with that email.',
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/invalid-credential': 'Incorrect email or password.',
+        'auth/email-already-in-use': 'That email is already registered.',
+        'auth/weak-password': 'Password must be at least 6 characters.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+        'auth/too-many-requests': 'Too many attempts — please wait and try again.',
+      })[code] || 'Authentication error. Please try again.';
+    }
+
+    async function handleAuthSubmit() {
+      const btn = $('auth-submit');
+      const email = $('auth-email').value.trim();
+      const pwd = $('auth-password').value;
+      $('auth-error').textContent = '';
+
+      if (!email || !pwd) {
+        $('auth-error').textContent = 'Please fill in all fields.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Please wait…';
+
+      try {
+        if (authMode === 'register') {
+          const name = $('auth-name').value.trim();
+          if (!name) { $('auth-error').textContent = 'Please enter your name.'; return; }
+          const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+          await updateProfile(cred.user, { displayName: name });
+          // onAuthStateChanged fires and handles the rest
+        } else {
+          await signInWithEmailAndPassword(auth, email, pwd);
+        }
+      } catch (err) {
+        $('auth-error').textContent = friendlyError(err.code);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = authMode === 'login' ? 'Log In' : 'Create Account';
+      }
+    }
+
+    // ── Auth state ────────────────────────────────────────────────
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        $('auth-overlay').style.display = 'none';
+        $('main-app').style.display = '';
+        samplerName = user.displayName || '';
+        $('user-name').textContent = abbreviateName(user.displayName || user.email);
+        $('sampler-chip').textContent = samplerName || '—';
+        updateTakeBtn();
+        loadHistory();
+      } else {
+        $('auth-overlay').style.display = '';
+        $('main-app').style.display = 'none';
+        samplerName = null;
+      }
+    });
+
+    // ── Take button ───────────────────────────────────────────────
+    function updateTakeBtn() {
+      $('take-btn').disabled = !selected;
+    }
+
+    // ── API calls ─────────────────────────────────────────────────
+    async function apiFetch(url, params = {}) {
+      const u = new URL(url);
+      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+      const r = await fetch(u, { headers: { Accept: 'application/json' } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    async function loadStations() {
+      const [locData, tempData] = await Promise.all([
+        apiFetch(`${HYDRO_BASE}/locations`),
+        apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' })
+      ]);
+      const locs = locData.payload;
+      const temps = {};
+      for (const e of tempData.payload) {
+        if (e.par === 'temperature') temps[e.loc] = { value: e.val, timestamp: e.timestamp };
+      }
+      const stations = [];
+      for (const [id, temp] of Object.entries(temps)) {
+        const d = locs[id]?.details;
+        if (!d || !d.lat || !d.lon) continue;
+        stations.push({
+          id, name: d.name || id,
+          water_body: d['water-body-name'] || '',
+          body_type: d['water-body-type'] || '',
+          lat: d.lat, lon: d.lon,
+          value: temp.value, timestamp: temp.timestamp
+        });
+      }
+      stations.sort((a, b) => a.name.localeCompare(b.name));
+      return stations;
+    }
+
+    async function loadSmnLocations() {
+      const data = await apiFetch(`${SMN_BASE}/locations`);
+      const result = {};
+      for (const [k, v] of Object.entries(data.payload)) {
+        const d = v.details || {};
+        if (d.lat && d.lon) result[k] = { name: d.name || k, canton: d.canton || '', lat: d.lat, lon: d.lon };
+      }
+      return result;
+    }
+
+    async function fetchAirTemp(smnId) {
+      const data = await apiFetch(`${SMN_BASE}/latest`, { locations: smnId, parameters: 'tt' });
+      return data.payload.find(e => e.par === 'tt') || null;
+    }
+
+    function findNearestSmn(lat, lon) {
+      let bestId = null, bestLoc = null, bestDist = Infinity;
+      for (const [id, loc] of Object.entries(smnLocations)) {
+        const d = haversine(lat, lon, loc.lat, loc.lon);
+        if (d < bestDist) { bestDist = d; bestId = id; bestLoc = loc; }
+      }
+      return { id: bestId, loc: bestLoc, dist: bestDist };
+    }
+
+    // ── Render station list ───────────────────────────────────────
+    function renderList(q = '') {
+      const ql = q.toLowerCase().trim();
+      let filtered = ql
+        ? allStations.filter(s => s.name.toLowerCase().includes(ql) || s.water_body.toLowerCase().includes(ql))
+        : allStations.slice();
+
+      if (userPos) {
+        for (const s of filtered) s._dist = haversine(userPos.lat, userPos.lon, s.lat, s.lon);
+        if (!ql) filtered.sort((a, b) => a._dist - b._dist);
+      }
+
+      const ul = $('station-list');
+      ul.innerHTML = '';
+      if (!filtered.length) { ul.innerHTML = '<li class="empty-msg">No stations found</li>'; return; }
+
+      for (const s of filtered) {
+        const li = document.createElement('li');
+        li.className = 'station-item' + (selected?.id === s.id ? ' selected' : '');
+        li.dataset.id = s.id;
+        const tag = s.body_type === 'lake'
+          ? `<span class="station-tag tag-lake">lake</span>`
+          : `<span class="station-tag tag-river">river</span>`;
+        const distBadge = (userPos && s._dist != null)
+          ? `<span class="station-dist">📍 ${s._dist < 1 ? (s._dist * 1000).toFixed(0) + ' m' : s._dist.toFixed(1) + ' km'}</span>`
+          : '';
+        li.innerHTML = `
       <div class="station-name">${s.name}${tag}${distBadge}</div>
       <div class="station-meta">${s.water_body} · ${s.value.toFixed(1)} °C now</div>`;
-    li.addEventListener('click', () => selectStation(s));
-    ul.appendChild(li);
-  }
-}
-
-function selectStation(s) {
-  selected = s;
-  renderList($('search').value);
-  updateTakeBtn();
-  setStatus(`Selected: ${s.name}`);
-  $('station-list').querySelector('.selected')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Take Sample ───────────────────────────────────────────────
-async function takeSample() {
-  if (!selected) return;
-
-  const volumeVal = $('volume').value.trim();
-  const volumeMl  = volumeVal ? parseInt(volumeVal, 10) : null;
-  if (!volumeVal || isNaN(volumeMl) || volumeMl <= 0) {
-    showToast('⚠️ Please enter a sample volume in ml.');
-    $('volume').focus();
-    return;
-  }
-
-  const btn   = $('take-btn');
-  const label = $('btn-label');
-  btn.disabled = true;
-  label.textContent = 'Fetching data…';
-  btn.querySelector('.btn-icon').style.display = 'none';
-  const spinner = document.createElement('div');
-  spinner.className = 'spinner';
-  btn.insertBefore(spinner, label);
-  setStatus('');
-
-  try {
-    label.textContent = 'Fetching data…';
-    const tempData = await apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' });
-
-    const entry     = tempData.payload.find(e => e.loc === selected.id && e.par === 'temperature');
-    const waterTemp = entry ? entry.val       : selected.value;
-    const waterTs   = entry ? entry.timestamp : selected.timestamp;
-
-    const { id: smnId, loc: smnLoc, dist: smnDist } = findNearestSmn(selected.lat, selected.lon);
-    let airTemp = null, airTs = null;
-    if (smnId) {
-      const ae = await fetchAirTemp(smnId);
-      if (ae) { airTemp = ae.val; airTs = ae.timestamp; }
+        li.addEventListener('click', () => selectStation(s));
+        ul.appendChild(li);
+      }
     }
 
-    lastResult = {
-      station: selected, samplerName, volumeMl,
-      waterTemp, waterTs, smnId, smnLoc, smnDist,
-      airTemp, airTs,
-      samplePos: null,
-      recordedAt: new Date()
-    };
+    function selectStation(s) {
+      selected = s;
+      renderList($('search').value);
+      updateTakeBtn();
+      setStatus(`Selected: ${s.name}`);
+      $('station-list').querySelector('.selected')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
-    // Open map picker — center on station list GPS if available
-    openMapPicker(userPos);
+    // ── Take Sample ───────────────────────────────────────────────
+    async function takeSample() {
+      if (!selected) return;
 
-  } catch (err) {
-    console.error(err);
-    setStatus('⚠️ Error: ' + err.message);
-    showToast('Could not fetch data. Check your connection.');
-  } finally {
-    btn.disabled = false;
-    spinner.remove();
-    label.textContent = 'Take Sample';
-    btn.querySelector('.btn-icon').style.display = '';
-    updateTakeBtn();
-  }
-}
+      const volumeVal = $('volume').value.trim();
+      const volumeMl = volumeVal ? parseInt(volumeVal, 10) : null;
+      if (!volumeVal || isNaN(volumeMl) || volumeMl <= 0) {
+        showToast('⚠️ Please enter a sample volume in ml.');
+        $('volume').focus();
+        return;
+      }
 
-// ── Show result (called after map picker) ─────────────────────
-function showResult() {
-  if (!lastResult) return;
-  const { station, samplerName: sName, volumeMl,
+      const btn = $('take-btn');
+      const label = $('btn-label');
+      btn.disabled = true;
+      label.textContent = 'Fetching data…';
+      btn.querySelector('.btn-icon').style.display = 'none';
+      const spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      btn.insertBefore(spinner, label);
+      setStatus('');
+
+      try {
+        label.textContent = 'Fetching data…';
+        const tempData = await apiFetch(`${HYDRO_BASE}/latest`, { parameters: 'temperature' });
+
+        const entry = tempData.payload.find(e => e.loc === selected.id && e.par === 'temperature');
+        const waterTemp = entry ? entry.val : selected.value;
+        const waterTs = entry ? entry.timestamp : selected.timestamp;
+
+        const { id: smnId, loc: smnLoc, dist: smnDist } = findNearestSmn(selected.lat, selected.lon);
+        let airTemp = null, airTs = null;
+        if (smnId) {
+          const ae = await fetchAirTemp(smnId);
+          if (ae) { airTemp = ae.val; airTs = ae.timestamp; }
+        }
+
+        lastResult = {
+          station: selected, samplerName, volumeMl,
           waterTemp, waterTs, smnId, smnLoc, smnDist,
-          airTemp, airTs, samplePos } = lastResult;
+          airTemp, airTs,
+          samplePos: null,
+          recordedAt: new Date()
+        };
 
-  $('r-water').textContent      = waterTemp.toFixed(2);
-  $('r-water-time').textContent  = formatTs(waterTs);
-  $('r-air').textContent        = airTemp !== null ? airTemp.toFixed(1) : 'N/A';
-  $('r-air-station').textContent = smnLoc ? `${smnLoc.name} (${smnDist.toFixed(1)} km)` : 'no station';
+        // Open map picker — center on station list GPS if available
+        openMapPicker(userPos);
 
-  const sampleLine = samplePos
-    ? `<b>Sample location:</b> <span>${samplePos.lat.toFixed(5)}, ${samplePos.lon.toFixed(5)}</span>`
-    : `<b>Sample location:</b> <span>not pinned</span>`;
+      } catch (err) {
+        console.error(err);
+        setStatus('⚠️ Error: ' + err.message);
+        showToast('Could not fetch data. Check your connection.');
+      } finally {
+        btn.disabled = false;
+        spinner.remove();
+        label.textContent = 'Take Sample';
+        btn.querySelector('.btn-icon').style.display = '';
+        updateTakeBtn();
+      }
+    }
 
-  $('r-detail').innerHTML = `
+    // ── Show result (called after map picker) ─────────────────────
+    function showResult() {
+      if (!lastResult) return;
+      const { station, samplerName: sName, volumeMl,
+        waterTemp, waterTs, smnId, smnLoc, smnDist,
+        airTemp, airTs, samplePos } = lastResult;
+
+      $('r-water').textContent = waterTemp.toFixed(2);
+      $('r-water-time').textContent = formatTs(waterTs);
+      $('r-air').textContent = airTemp !== null ? airTemp.toFixed(1) : 'N/A';
+      $('r-air-station').textContent = smnLoc ? `${smnLoc.name} (${smnDist.toFixed(1)} km)` : 'no station';
+
+      const sampleLine = samplePos
+        ? `<b>Sample location:</b> <span>${samplePos.lat.toFixed(5)}, ${samplePos.lon.toFixed(5)}</span>`
+        : `<b>Sample location:</b> <span>not pinned</span>`;
+
+      $('r-detail').innerHTML = `
     <b>Sampler:</b> <span>${sName}</span><br>
     <b>Sample volume:</b> <span>${volumeMl} ml</span><br>
     <b>Station:</b> <span>${station.name}</span><br>
@@ -1309,193 +2141,193 @@ function showResult() {
     <b>Station coordinates:</b> <span>${station.lat}, ${station.lon}</span><br>
     ${sampleLine}`;
 
-  $('result').classList.add('visible');
-  $('result').scrollIntoView({ behavior: 'smooth' });
-  setStatus('✅ Sample recorded!');
-}
+      $('result').classList.add('visible');
+      $('result').scrollIntoView({ behavior: 'smooth' });
+      setStatus('✅ Sample recorded!');
+    }
 
-// ── Map Picker ────────────────────────────────────────────────
-let pickerMap = null;
-let pickerMarker = null;
-let pickerGpsMarker = null;
-let mapPickerMode = 'sampling'; // 'sampling' | 'editing'
+    // ── Map Picker ────────────────────────────────────────────────
+    let pickerMap = null;
+    let pickerMarker = null;
+    let pickerGpsMarker = null;
+    let mapPickerMode = 'sampling'; // 'sampling' | 'editing'
 
-function openMapPicker(gpsPos, mode = 'sampling', existingLat = null, existingLon = null) {
-  mapPickerMode = mode;
-  $('map-picker').classList.add('open');
-  $('mp-confirm').disabled = true;
-  $('mp-coords').innerHTML = 'Tap the map to pin a location';
-  $('mp-skip').textContent = mode === 'editing' ? 'Back' : 'Skip';
+    function openMapPicker(gpsPos, mode = 'sampling', existingLat = null, existingLon = null) {
+      mapPickerMode = mode;
+      $('map-picker').classList.add('open');
+      $('mp-confirm').disabled = true;
+      $('mp-coords').innerHTML = 'Tap the map to pin a location';
+      $('mp-skip').textContent = mode === 'editing' ? 'Back' : 'Skip';
 
-  // Init map once
-  if (!pickerMap) {
-    pickerMap = L.map('mp-map', { zoomControl: true });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-      subdomains: 'abcd', maxZoom: 20
-    }).addTo(pickerMap);
-    pickerMap.on('click', onPickerClick);
-  }
+      // Init map once
+      if (!pickerMap) {
+        pickerMap = L.map('mp-map', { zoomControl: true });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+          subdomains: 'abcd', maxZoom: 20
+        }).addTo(pickerMap);
+        pickerMap.on('click', onPickerClick);
+      }
 
-  // Remove old markers
-  if (pickerMarker)    { pickerMap.removeLayer(pickerMarker);    pickerMarker    = null; }
-  if (pickerGpsMarker) { pickerMap.removeLayer(pickerGpsMarker); pickerGpsMarker = null; }
+      // Remove old markers
+      if (pickerMarker) { pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+      if (pickerGpsMarker) { pickerMap.removeLayer(pickerGpsMarker); pickerGpsMarker = null; }
 
-  // If editing and an existing pin exists, show it and center on it
-  if (existingLat != null && existingLon != null) {
-    const latlng = L.latLng(existingLat, existingLon);
-    pickerMarker = L.marker(latlng, {
-      icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32,32], iconAnchor: [16,32] })
-    }).addTo(pickerMap);
-    pickerMap.setView(latlng, 15);
-    $('mp-coords').innerHTML = `<span>${existingLat.toFixed(5)}, ${existingLon.toFixed(5)}</span>`;
-    $('mp-confirm').disabled = false;
-  } else if (gpsPos) {
-    pickerMap.setView([gpsPos.lat, gpsPos.lon], 15);
-    pickerGpsMarker = L.circleMarker([gpsPos.lat, gpsPos.lon], {
-      radius: 9, color: '#4285f4', fillColor: '#4285f4',
-      fillOpacity: .55, weight: 2.5, interactive: false
-    }).addTo(pickerMap);
-  } else {
-    pickerMap.setView([46.818, 8.228], 8);
-  }
+      // If editing and an existing pin exists, show it and center on it
+      if (existingLat != null && existingLon != null) {
+        const latlng = L.latLng(existingLat, existingLon);
+        pickerMarker = L.marker(latlng, {
+          icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32, 32], iconAnchor: [16, 32] })
+        }).addTo(pickerMap);
+        pickerMap.setView(latlng, 15);
+        $('mp-coords').innerHTML = `<span>${existingLat.toFixed(5)}, ${existingLon.toFixed(5)}</span>`;
+        $('mp-confirm').disabled = false;
+      } else if (gpsPos) {
+        pickerMap.setView([gpsPos.lat, gpsPos.lon], 15);
+        pickerGpsMarker = L.circleMarker([gpsPos.lat, gpsPos.lon], {
+          radius: 9, color: '#4285f4', fillColor: '#4285f4',
+          fillOpacity: .55, weight: 2.5, interactive: false
+        }).addTo(pickerMap);
+      } else {
+        pickerMap.setView([46.818, 8.228], 8);
+      }
 
-  setTimeout(() => pickerMap.invalidateSize(), 120);
-}
+      setTimeout(() => pickerMap.invalidateSize(), 120);
+    }
 
-function onPickerClick(e) {
-  const { lat, lng } = e.latlng;
+    function onPickerClick(e) {
+      const { lat, lng } = e.latlng;
 
-  if (mapPickerMode === 'sampling') {
-    if (!lastResult) return;
-    lastResult.samplePos = { lat, lon: lng };
-  } else {
-    // editing mode — temporarily store in edit state
-    editSampleLat = lat;
-    editSampleLon = lng;
-  }
+      if (mapPickerMode === 'sampling') {
+        if (!lastResult) return;
+        lastResult.samplePos = { lat, lon: lng };
+      } else {
+        // editing mode — temporarily store in edit state
+        editSampleLat = lat;
+        editSampleLon = lng;
+      }
 
-  if (pickerMarker) {
-    pickerMarker.setLatLng(e.latlng);
-  } else {
-    pickerMarker = L.marker(e.latlng, {
-      icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32,32], iconAnchor: [16,32] })
-    }).addTo(pickerMap);
-  }
+      if (pickerMarker) {
+        pickerMarker.setLatLng(e.latlng);
+      } else {
+        pickerMarker = L.marker(e.latlng, {
+          icon: L.divIcon({ className: 'sample-pin', html: '💧', iconSize: [32, 32], iconAnchor: [16, 32] })
+        }).addTo(pickerMap);
+      }
 
-  $('mp-coords').innerHTML = `<span>${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`;
-  $('mp-confirm').disabled = false;
-}
+      $('mp-coords').innerHTML = `<span>${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`;
+      $('mp-confirm').disabled = false;
+    }
 
-function closeMapPicker() {
-  $('map-picker').classList.remove('open');
-  $('mp-skip').textContent = 'Skip'; // reset for next open
-}
+    function closeMapPicker() {
+      $('map-picker').classList.remove('open');
+      $('mp-skip').textContent = 'Skip'; // reset for next open
+    }
 
-function confirmLocation() {
-  closeMapPicker();
-  if (mapPickerMode === 'editing') {
-    updateEditLocDisplay();
-    $('edit-panel').classList.add('open');
-  } else {
-    showResult();
-  }
-}
+    function confirmLocation() {
+      closeMapPicker();
+      if (mapPickerMode === 'editing') {
+        updateEditLocDisplay();
+        $('edit-panel').classList.add('open');
+      } else {
+        showResult();
+      }
+    }
 
-function skipLocation() {
-  closeMapPicker();
-  if (mapPickerMode === 'editing') {
-    // Back to edit panel without changing the location
-    editSampleLat = editSampleLat; // unchanged
-    $('edit-panel').classList.add('open');
-  } else {
-    if (lastResult) lastResult.samplePos = null;
-    showResult();
-  }
-}
+    function skipLocation() {
+      closeMapPicker();
+      if (mapPickerMode === 'editing') {
+        // Back to edit panel without changing the location
+        editSampleLat = editSampleLat; // unchanged
+        $('edit-panel').classList.add('open');
+      } else {
+        if (lastResult) lastResult.samplePos = null;
+        showResult();
+      }
+    }
 
-// ── Cloud Save ────────────────────────────────────────────────
-async function saveToCloud() {
-  if (!lastResult || !currentUser) return;
+    // ── Cloud Save ────────────────────────────────────────────────
+    async function saveToCloud() {
+      if (!lastResult || !currentUser) return;
 
-  const btn = $('cloud-save-btn');
-  const origHTML = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="border-color:rgba(0,201,177,.3);border-top-color:var(--accent)"></div> Saving…';
+      const btn = $('cloud-save-btn');
+      const origHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="border-color:rgba(0,201,177,.3);border-top-color:var(--accent)"></div> Saving…';
 
-  const { station, samplerName: sName, volumeMl,
-          waterTemp, waterTs, smnId, smnLoc, smnDist,
-          airTemp, airTs, samplePos, recordedAt } = lastResult;
+      const { station, samplerName: sName, volumeMl,
+        waterTemp, waterTs, smnId, smnLoc, smnDist,
+        airTemp, airTs, samplePos, recordedAt } = lastResult;
 
-  try {
-    const col = collection(db, 'users', currentUser.uid, 'samplings');
-    await addDoc(col, {
-      savedAt:     recordedAt.toISOString(),
-      stationId:   station.id,
-      stationName: station.name,
-      waterBody:   station.water_body,
-      bodyType:    station.body_type,
-      stationLat:  station.lat,
-      stationLon:  station.lon,
-      samplerName: sName,
-      volumeMl,
-      waterTemp,
-      waterTs,
-      airTemp:     airTemp        ?? null,
-      airTs:       airTs          ?? null,
-      smnId:       smnId          ?? null,
-      smnName:     smnLoc?.name   ?? null,
-      smnDist:     smnDist        ?? null,
-      sampleLat:   samplePos?.lat ?? null,
-      sampleLon:   samplePos?.lon ?? null,
-      cyanobacteria: null
-    });
-    showToast('☁️ Saved to your account!');
-    await loadHistory();
-    if (!historyOpen) toggleHistory();
-  } catch (err) {
-    console.error(err);
-    showToast('⚠️ Cloud save failed. Check connection.');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = origHTML;
-  }
-}
+      try {
+        const col = collection(db, 'users', currentUser.uid, 'samplings');
+        await addDoc(col, {
+          savedAt: recordedAt.toISOString(),
+          stationId: station.id,
+          stationName: station.name,
+          waterBody: station.water_body,
+          bodyType: station.body_type,
+          stationLat: station.lat,
+          stationLon: station.lon,
+          samplerName: sName,
+          volumeMl,
+          waterTemp,
+          waterTs,
+          airTemp: airTemp ?? null,
+          airTs: airTs ?? null,
+          smnId: smnId ?? null,
+          smnName: smnLoc?.name ?? null,
+          smnDist: smnDist ?? null,
+          sampleLat: samplePos?.lat ?? null,
+          sampleLon: samplePos?.lon ?? null,
+          cyanobacteria: null
+        });
+        showToast('☁️ Saved to your account!');
+        await loadHistory();
+        if (!historyOpen) toggleHistory();
+      } catch (err) {
+        console.error(err);
+        showToast('⚠️ Cloud save failed. Check connection.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+      }
+    }
 
-// ── Load & render history ─────────────────────────────────────
-async function loadHistory() {
-  if (!currentUser) return;
-  try {
-    const col  = collection(db, 'users', currentUser.uid, 'samplings');
-    const q    = query(col, orderBy('savedAt', 'desc'));
-    const snap = await getDocs(q);
-    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderHistory(items);
-  } catch (err) {
-    console.error('History load failed:', err);
-  }
-}
+    // ── Load & render history ─────────────────────────────────────
+    async function loadHistory() {
+      if (!currentUser) return;
+      try {
+        const col = collection(db, 'users', currentUser.uid, 'samplings');
+        const q = query(col, orderBy('savedAt', 'desc'));
+        const snap = await getDocs(q);
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderHistory(items);
+      } catch (err) {
+        console.error('History load failed:', err);
+      }
+    }
 
-function renderHistory(items) {
-  $('history-count').textContent = items.length > 0 ? `${items.length}` : '';
+    function renderHistory(items) {
+      $('history-count').textContent = items.length > 0 ? `${items.length}` : '';
 
-  if (!items.length) {
-    $('history-list').innerHTML = `<p class="history-empty">No samplings saved yet.<br>Take a sample and hit "Save to My Account"!</p>`;
-    return;
-  }
+      if (!items.length) {
+        $('history-list').innerHTML = `<p class="history-empty">No samplings saved yet.<br>Take a sample and hit "Save to My Account"!</p>`;
+        return;
+      }
 
-  $('history-list').innerHTML = items.map(s => {
-    const bodyTag = s.bodyType === 'lake'
-      ? `<span class="station-tag tag-lake">lake</span>`
-      : `<span class="station-tag tag-river">river</span>`;
-    const waterStr = s.waterTemp != null ? `${s.waterTemp.toFixed(2)} °C` : 'N/A';
-    const airStr   = s.airTemp   != null ? `${s.airTemp.toFixed(1)} °C`   : 'N/A';
-    const cyanoBadge = s.cyanobacteria === true
-      ? `<span class="hi-cyano-yes">⚠️ Cyano+</span>`
-      : s.cyanobacteria === false
-        ? `<span class="hi-cyano-no">✅ Cyano−</span>`
-        : '';
-    return `
+      $('history-list').innerHTML = items.map(s => {
+        const bodyTag = s.bodyType === 'lake'
+          ? `<span class="station-tag tag-lake">lake</span>`
+          : `<span class="station-tag tag-river">river</span>`;
+        const waterStr = s.waterTemp != null ? `${s.waterTemp.toFixed(2)} °C` : 'N/A';
+        const airStr = s.airTemp != null ? `${s.airTemp.toFixed(1)} °C` : 'N/A';
+        const cyanoBadge = s.cyanobacteria === true
+          ? `<span class="hi-cyano-yes">Cyano+</span>`
+          : s.cyanobacteria === false
+            ? `<span class="hi-cyano-no">Cyano−</span>`
+            : '';
+        return `
       <div class="history-item" data-id="${s.id}" style="cursor:pointer">
         <div class="hi-row">
           <span class="hi-station">${s.stationName}</span>${bodyTag}${cyanoBadge}
@@ -1510,250 +2342,250 @@ function renderHistory(items) {
           ${s.smnName ? `· near ${s.smnName}` : ''}
         </div>
       </div>`;
-  }).join('');
+      }).join('');
 
-  // Attach click handlers after rendering
-  $('history-list').querySelectorAll('.history-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const item = items.find(s => s.id === el.dataset.id);
-      if (item) openEditPanel(item);
-    });
-  });
-}
-
-function toggleHistory() {
-  historyOpen = !historyOpen;
-  $('history-list').classList.toggle('open', historyOpen);
-  $('history-chevron').classList.toggle('open', historyOpen);
-}
-
-// ── Edit Panel ────────────────────────────────────────────────
-let editingId   = null;
-let editCyano   = null;
-let editSampleLat = null;
-let editSampleLon = null;
-
-function updateEditLocDisplay() {
-  const el = $('ef-loc-display');
-  if (editSampleLat != null && editSampleLon != null) {
-    el.textContent = `${editSampleLat.toFixed(5)}, ${editSampleLon.toFixed(5)}`;
-    el.classList.add('has-pin');
-    $('ef-loc-btn').textContent = '📍 Change';
-  } else {
-    el.textContent = 'not pinned';
-    el.classList.remove('has-pin');
-    $('ef-loc-btn').textContent = '📍 Set location';
-  }
-}
-
-function openEditPanel(s) {
-  editingId     = s.id;
-  editCyano     = s.cyanobacteria ?? null;
-  editSampleLat = s.sampleLat ?? null;
-  editSampleLon = s.sampleLon ?? null;
-
-  // Read-only info
-  $('ef-station').value = s.stationName || '';
-  $('ef-date').value    = formatIso(s.savedAt);
-
-  // Editable fields
-  $('ef-sampler').value = s.samplerName || '';
-  $('ef-volume').value  = s.volumeMl    ?? '';
-  $('ef-water').value   = s.waterTemp   ?? '';
-  $('ef-air').value     = s.airTemp     ?? '';
-  $('ef-smn').value     = s.smnName ? `${s.smnName} (${s.smnDist?.toFixed(1)} km)` : '';
-
-  $('edit-sub').textContent = `${s.stationName} · ${formatIso(s.savedAt)}`;
-  updateEditLocDisplay();
-  setCyanoUI(editCyano);
-  $('edit-panel').classList.add('open');
-}
-
-function closeEditPanel() {
-  $('edit-panel').classList.remove('open');
-  editingId = null;
-}
-
-function setCyanoUI(val) {
-  editCyano = val;
-  $('cyano-null').className = 'cyano-btn' + (val === null  ? ' active-null' : '');
-  $('cyano-yes').className  = 'cyano-btn' + (val === true  ? ' active-yes'  : '');
-  $('cyano-no').className   = 'cyano-btn' + (val === false ? ' active-no'   : '');
-}
-
-async function saveEdit() {
-  if (!editingId || !currentUser) return;
-
-  const btn = $('edit-save');
-  const origHTML = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Saving…';
-
-  try {
-    await updateDoc(
-      doc(db, 'users', currentUser.uid, 'samplings', editingId),
-      {
-        samplerName:   $('ef-sampler').value.trim() || null,
-        volumeMl:      parseFloat($('ef-volume').value) || null,
-        waterTemp:     parseFloat($('ef-water').value)  || null,
-        airTemp:       $('ef-air').value.trim() ? parseFloat($('ef-air').value) : null,
-        sampleLat:     editSampleLat,
-        sampleLon:     editSampleLon,
-        cyanobacteria: editCyano
-      }
-    );
-    showToast('✅ Sampling updated!');
-    closeEditPanel();
-    await loadHistory();
-  } catch (err) {
-    console.error(err);
-    showToast('⚠️ Save failed. Check connection.');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = origHTML;
-  }
-}
-
-// ── Save .txt ─────────────────────────────────────────────────
-function saveFile() {
-  if (!lastResult) return;
-  const { station, samplerName: sName, volumeMl,
-          waterTemp, waterTs, smnId, smnLoc, smnDist,
-          airTemp, airTs, samplePos, recordedAt } = lastResult;
-
-  const dateStr  = recordedAt.toISOString().slice(0,10);
-  const timeStr  = recordedAt.toTimeString().slice(0,8).replace(/:/g,'-');
-  const filename = `${dateStr}_${timeStr}_${sanitize(station.name)}.txt`;
-
-  const airLine = airTemp !== null
-    ? `Air Temp (SMN)       : ${airTemp.toFixed(1)} °C\nSMN Station          : ${smnLoc?.name} (${smnId}, ${smnDist.toFixed(1)} km away)\nAir Temp measured at : ${formatTs(airTs)}`
-    : `Air Temperature      : not available`;
-
-  const sampleLocLine = samplePos
-    ? `Sample Location      : lat ${samplePos.lat.toFixed(5)}, lon ${samplePos.lon.toFixed(5)}`
-    : `Sample Location      : not pinned`;
-
-  const content = [
-    `Sampled by           : ${sName}`,
-    `Sample Volume        : ${volumeMl} ml`,
-    ``,
-    `Measurement Station  : ${station.name}`,
-    `Water Body           : ${station.water_body} (${station.body_type})`,
-    `Station Coordinates  : lat ${station.lat}, lon ${station.lon}`,
-    `Measured at (source) : ${formatTs(waterTs)}`,
-    `Saved at (local)     : ${recordedAt.toLocaleString('de-CH')}`,
-    ``,
-    `Water Temperature    : ${waterTemp.toFixed(2)} °C`,
-    ``,
-    airLine,
-    ``,
-    sampleLocLine,
-    ``,
-    `Hydro source : ${HYDRO_BASE}`,
-    `SMN source   : ${SMN_BASE}`,
-    `Data         : BAFU/FOEN (hydrology) & MeteoSwiss/SwissMetNet (weather)`
-  ].join('\n');
-
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast(`✅ Saved: ${filename}`);
-}
-
-// ── Init ──────────────────────────────────────────────────────
-async function init() {
-  setStatus('Loading stations…');
-  try {
-    [allStations, smnLocations] = await Promise.all([ loadStations(), loadSmnLocations() ]);
-    renderList();
-    setStatus(`${allStations.length} stations loaded. Requesting your location…`);
-    getUserPosition().then(pos => {
-      userPos = pos;
-      setStatus(pos
-        ? `${allStations.length} stations loaded · sorted by distance from you.`
-        : `${allStations.length} stations loaded. Choose one above.`);
-      renderList($('search').value);
-    });
-  } catch (err) {
-    setStatus('⚠️ Failed to load stations. Check connection.');
-    showToast('Network error: ' + err.message, 4000);
-  }
-}
-
-// ── Community Map ───────────────────────────────────────────────
-let sharedMap     = null;
-let sharedMarkers = [];
-
-// Default date range: last 30 days → today
-(function initDateRange() {
-  const now  = new Date();
-  const past = new Date(now); past.setDate(past.getDate() - 30);
-  $('map-to').value   = now.toISOString().slice(0,10);
-  $('map-from').value = past.toISOString().slice(0,10);
-})();
-
-function initSharedMap() {
-  if (sharedMap) return;
-  sharedMap = L.map('shared-map').setView([46.818, 8.228], 8);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd', maxZoom: 20
-  }).addTo(sharedMap);
-}
-
-async function loadSharedMap() {
-  if (!currentUser) return;
-  const btn = $('map-load-btn');
-  btn.disabled = true; btn.textContent = 'Loading…';
-  $('pm-count').textContent = '';
-
-  initSharedMap();
-  setTimeout(() => sharedMap.invalidateSize(), 120);
-  sharedMarkers.forEach(m => sharedMap.removeLayer(m));
-  sharedMarkers = [];
-
-  const fromVal = $('map-from').value;
-  const toVal   = $('map-to').value;
-  if (!fromVal || !toVal) { btn.disabled = false; btn.textContent = '📡 Load'; return; }
-
-  const fromIso = new Date(fromVal + 'T00:00:00Z').toISOString();
-  const toIso   = new Date(toVal   + 'T23:59:59Z').toISOString();
-
-  try {
-    const q    = query(
-      collectionGroup(db, 'samplings'),
-      where('savedAt', '>=', fromIso),
-      where('savedAt', '<=', toIso),
-      orderBy('savedAt', 'desc')
-    );
-    const snap  = await getDocs(q);
-    const items = snap.docs.map(d => d.data());
-
-    items.forEach(s => {
-      const lat = s.sampleLat ?? s.stationLat;
-      const lon = s.sampleLon ?? s.stationLon;
-      if (lat == null || lon == null) return;
-
-      const cyano  = s.cyanobacteria;
-      const color  = cyano === true ? '#ff5555' : cyano === false ? '#22d96a' : '#4285f4';
-      const fillOp = cyano === true ? .85        : cyano === false ? .85        : .65;
-
-      const marker = L.circleMarker([lat, lon], {
-        radius: 9, color: '#fff', weight: 1.5,
-        fillColor: color, fillOpacity: fillOp
+      // Attach click handlers after rendering
+      $('history-list').querySelectorAll('.history-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const item = items.find(s => s.id === el.dataset.id);
+          if (item) openEditPanel(item);
+        });
       });
+    }
 
-      const cyanoHtml = cyano === true
-        ? `<span class="pm-popup-cyano-pos">⚠️ Cyanobacteria detected</span>`
-        : cyano === false
-          ? `<span class="pm-popup-cyano-neg">✅ No cyanobacteria</span>`
-          : `<span class="pm-popup-cyano-unk">🔬 Not yet analyzed</span>`;
-      const locNote = s.sampleLat ? '' : '<br><span style="color:var(--text-muted);font-size:.7rem">Pin: station fallback</span>';
+    function toggleHistory() {
+      historyOpen = !historyOpen;
+      $('history-list').classList.toggle('open', historyOpen);
+      $('history-chevron').classList.toggle('open', historyOpen);
+    }
 
-      marker.bindPopup(`
+    // ── Edit Panel ────────────────────────────────────────────────
+    let editingId = null;
+    let editCyano = null;
+    let editSampleLat = null;
+    let editSampleLon = null;
+
+    function updateEditLocDisplay() {
+      const el = $('ef-loc-display');
+      if (editSampleLat != null && editSampleLon != null) {
+        el.textContent = `${editSampleLat.toFixed(5)}, ${editSampleLon.toFixed(5)}`;
+        el.classList.add('has-pin');
+        $('ef-loc-btn').textContent = '📍 Change';
+      } else {
+        el.textContent = 'not pinned';
+        el.classList.remove('has-pin');
+        $('ef-loc-btn').textContent = '📍 Set location';
+      }
+    }
+
+    function openEditPanel(s) {
+      editingId = s.id;
+      editCyano = s.cyanobacteria ?? null;
+      editSampleLat = s.sampleLat ?? null;
+      editSampleLon = s.sampleLon ?? null;
+
+      // Read-only info
+      $('ef-station').value = s.stationName || '';
+      $('ef-date').value = formatIso(s.savedAt);
+
+      // Editable fields
+      $('ef-sampler').value = s.samplerName || '';
+      $('ef-volume').value = s.volumeMl ?? '';
+      $('ef-water').value = s.waterTemp ?? '';
+      $('ef-air').value = s.airTemp ?? '';
+      $('ef-smn').value = s.smnName ? `${s.smnName} (${s.smnDist?.toFixed(1)} km)` : '';
+
+      $('edit-sub').textContent = `${s.stationName} · ${formatIso(s.savedAt)}`;
+      updateEditLocDisplay();
+      setCyanoUI(editCyano);
+      $('edit-panel').classList.add('open');
+    }
+
+    function closeEditPanel() {
+      $('edit-panel').classList.remove('open');
+      editingId = null;
+    }
+
+    function setCyanoUI(val) {
+      editCyano = val;
+      $('cyano-null').className = 'cyano-btn' + (val === null ? ' active-null' : '');
+      $('cyano-yes').className = 'cyano-btn' + (val === true ? ' active-yes' : '');
+      $('cyano-no').className = 'cyano-btn' + (val === false ? ' active-no' : '');
+    }
+
+    async function saveEdit() {
+      if (!editingId || !currentUser) return;
+
+      const btn = $('edit-save');
+      const origHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Saving…';
+
+      try {
+        await updateDoc(
+          doc(db, 'users', currentUser.uid, 'samplings', editingId),
+          {
+            samplerName: $('ef-sampler').value.trim() || null,
+            volumeMl: parseFloat($('ef-volume').value) || null,
+            waterTemp: parseFloat($('ef-water').value) || null,
+            airTemp: $('ef-air').value.trim() ? parseFloat($('ef-air').value) : null,
+            sampleLat: editSampleLat,
+            sampleLon: editSampleLon,
+            cyanobacteria: editCyano
+          }
+        );
+        showToast('✅ Sampling updated!');
+        closeEditPanel();
+        await loadHistory();
+      } catch (err) {
+        console.error(err);
+        showToast('⚠️ Save failed. Check connection.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+      }
+    }
+
+    // ── Save .txt ─────────────────────────────────────────────────
+    function saveFile() {
+      if (!lastResult) return;
+      const { station, samplerName: sName, volumeMl,
+        waterTemp, waterTs, smnId, smnLoc, smnDist,
+        airTemp, airTs, samplePos, recordedAt } = lastResult;
+
+      const dateStr = recordedAt.toISOString().slice(0, 10);
+      const timeStr = recordedAt.toTimeString().slice(0, 8).replace(/:/g, '-');
+      const filename = `${dateStr}_${timeStr}_${sanitize(station.name)}.txt`;
+
+      const airLine = airTemp !== null
+        ? `Air Temp (SMN)       : ${airTemp.toFixed(1)} °C\nSMN Station          : ${smnLoc?.name} (${smnId}, ${smnDist.toFixed(1)} km away)\nAir Temp measured at : ${formatTs(airTs)}`
+        : `Air Temperature      : not available`;
+
+      const sampleLocLine = samplePos
+        ? `Sample Location      : lat ${samplePos.lat.toFixed(5)}, lon ${samplePos.lon.toFixed(5)}`
+        : `Sample Location      : not pinned`;
+
+      const content = [
+        `Sampled by           : ${sName}`,
+        `Sample Volume        : ${volumeMl} ml`,
+        ``,
+        `Measurement Station  : ${station.name}`,
+        `Water Body           : ${station.water_body} (${station.body_type})`,
+        `Station Coordinates  : lat ${station.lat}, lon ${station.lon}`,
+        `Measured at (source) : ${formatTs(waterTs)}`,
+        `Saved at (local)     : ${recordedAt.toLocaleString('de-CH')}`,
+        ``,
+        `Water Temperature    : ${waterTemp.toFixed(2)} °C`,
+        ``,
+        airLine,
+        ``,
+        sampleLocLine,
+        ``,
+        `Hydro source : ${HYDRO_BASE}`,
+        `SMN source   : ${SMN_BASE}`,
+        `Data         : BAFU/FOEN (hydrology) & MeteoSwiss/SwissMetNet (weather)`
+      ].join('\n');
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showToast(`✅ Saved: ${filename}`);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    async function init() {
+      setStatus('Loading stations…');
+      try {
+        [allStations, smnLocations] = await Promise.all([loadStations(), loadSmnLocations()]);
+        renderList();
+        setStatus(`${allStations.length} stations loaded. Requesting your location…`);
+        getUserPosition().then(pos => {
+          userPos = pos;
+          setStatus(pos
+            ? `${allStations.length} stations loaded · sorted by distance from you.`
+            : `${allStations.length} stations loaded. Choose one above.`);
+          renderList($('search').value);
+        });
+      } catch (err) {
+        setStatus('⚠️ Failed to load stations. Check connection.');
+        showToast('Network error: ' + err.message, 4000);
+      }
+    }
+
+    // ── Community Map ───────────────────────────────────────────────
+    let sharedMap = null;
+    let sharedMarkers = [];
+
+    // Default date range: last 30 days → today
+    (function initDateRange() {
+      const now = new Date();
+      const past = new Date(now); past.setDate(past.getDate() - 30);
+      $('map-to').value = now.toISOString().slice(0, 10);
+      $('map-from').value = past.toISOString().slice(0, 10);
+    })();
+
+    function initSharedMap() {
+      if (sharedMap) return;
+      sharedMap = L.map('shared-map').setView([46.818, 8.228], 8);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 20
+      }).addTo(sharedMap);
+    }
+
+    async function loadSharedMap() {
+      if (!currentUser) return;
+      const btn = $('map-load-btn');
+      btn.disabled = true; btn.textContent = 'Loading…';
+      $('pm-count').textContent = '';
+
+      initSharedMap();
+      setTimeout(() => sharedMap.invalidateSize(), 120);
+      sharedMarkers.forEach(m => sharedMap.removeLayer(m));
+      sharedMarkers = [];
+
+      const fromVal = $('map-from').value;
+      const toVal = $('map-to').value;
+      if (!fromVal || !toVal) { btn.disabled = false; btn.textContent = '📡 Load'; return; }
+
+      const fromIso = new Date(fromVal + 'T00:00:00Z').toISOString();
+      const toIso = new Date(toVal + 'T23:59:59Z').toISOString();
+
+      try {
+        const q = query(
+          collectionGroup(db, 'samplings'),
+          where('savedAt', '>=', fromIso),
+          where('savedAt', '<=', toIso),
+          orderBy('savedAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        const items = snap.docs.map(d => d.data());
+
+        items.forEach(s => {
+          const lat = s.sampleLat ?? s.stationLat;
+          const lon = s.sampleLon ?? s.stationLon;
+          if (lat == null || lon == null) return;
+
+          const cyano = s.cyanobacteria;
+          const color = cyano === true ? '#ff5555' : cyano === false ? '#22d96a' : '#4285f4';
+          const fillOp = cyano === true ? .85 : cyano === false ? .85 : .65;
+
+          const marker = L.circleMarker([lat, lon], {
+            radius: 9, color: '#fff', weight: 1.5,
+            fillColor: color, fillOpacity: fillOp
+          });
+
+          const cyanoHtml = cyano === true
+            ? `<span class="pm-popup-cyano-pos">Cyanobacteria detected</span>`
+            : cyano === false
+              ? `<span class="pm-popup-cyano-neg">No cyanobacteria</span>`
+              : `<span class="pm-popup-cyano-unk">Not yet analyzed</span>`;
+          const locNote = s.sampleLat ? '' : '<br><span style="color:var(--text-muted);font-size:.7rem">Pin: station fallback</span>';
+
+          marker.bindPopup(`
         <div class="pm-popup-station">${s.stationName || '—'}</div>
         <div class="pm-popup-row">
           <b>Date:</b> ${formatIso(s.savedAt)}<br>
@@ -1763,75 +2595,76 @@ async function loadSharedMap() {
           ${cyanoHtml}${locNote}
         </div>`, { maxWidth: 220 });
 
-      marker.addTo(sharedMap);
-      sharedMarkers.push(marker);
+          marker.addTo(sharedMap);
+          sharedMarkers.push(marker);
+        });
+
+        $('pm-count').textContent = `${sharedMarkers.length} sampling${sharedMarkers.length !== 1 ? 's' : ''}`;
+        if (sharedMarkers.length > 0)
+          sharedMap.fitBounds(L.featureGroup(sharedMarkers).getBounds().pad(0.15));
+      } catch (err) {
+        console.error('Shared map load failed:', err);
+        showToast('⚠️ Map load failed. Check Firestore rules.');
+      } finally {
+        btn.disabled = false; btn.textContent = '📡 Load';
+      }
+    }
+
+    // ── Tab switching ────────────────────────────────────────────────
+    function switchTab(tab) {
+      const isMap = tab === 'map';
+      $('pane-map').classList.toggle('open', isMap);
+      $('nav-sample').classList.toggle('active', !isMap);
+      $('nav-map').classList.toggle('active', isMap);
+      if (isMap) {
+        if (sharedMarkers.length === 0) loadSharedMap();
+        else { initSharedMap(); setTimeout(() => sharedMap.invalidateSize(), 120); }
+      }
+    }
+
+    // ── Events ────────────────────────────────────────────────
+    // ── All event listeners ───────────────────────────────────────
+    $('search').addEventListener('input', e => renderList(e.target.value));
+    $('take-btn').addEventListener('click', takeSample);
+    $('save-btn').addEventListener('click', saveFile);
+    $('cloud-save-btn').addEventListener('click', saveToCloud);
+    $('sign-out-btn').addEventListener('click', () => signOut(auth));
+    $('auth-submit').addEventListener('click', handleAuthSubmit);
+    $('tab-login').addEventListener('click', () => setAuthMode('login'));
+    $('tab-register').addEventListener('click', () => setAuthMode('register'));
+    $('history-toggle-btn').addEventListener('click', toggleHistory);
+    $('mp-confirm').addEventListener('click', confirmLocation);
+    $('mp-skip').addEventListener('click', skipLocation);
+    $('edit-close').addEventListener('click', closeEditPanel);
+    $('edit-save').addEventListener('click', saveEdit);
+    $('ef-loc-btn').addEventListener('click', () => {
+      $('edit-panel').classList.remove('open');
+      openMapPicker(userPos, 'editing', editSampleLat, editSampleLon);
+    });
+    document.querySelectorAll('.cyano-btn').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const v = btn.dataset.cyano;
+        setCyanoUI(v === 'yes' ? true : v === 'no' ? false : null);
+      })
+    );
+
+    // Enter key in auth fields
+    ['auth-name', 'auth-email', 'auth-password'].forEach(id => {
+      $(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuthSubmit(); });
     });
 
-    $('pm-count').textContent = `${sharedMarkers.length} sampling${sharedMarkers.length !== 1 ? 's' : ''}`;
-    if (sharedMarkers.length > 0)
-      sharedMap.fitBounds(L.featureGroup(sharedMarkers).getBounds().pad(0.15));
-  } catch (err) {
-    console.error('Shared map load failed:', err);
-    showToast('⚠️ Map load failed. Check Firestore rules.');
-  } finally {
-    btn.disabled = false; btn.textContent = '📡 Load';
-  }
-}
+    // Tab nav
+    $('nav-sample').addEventListener('click', () => switchTab('sample'));
+    $('nav-map').addEventListener('click', () => switchTab('map'));
+    $('map-load-btn').addEventListener('click', loadSharedMap);
 
-// ── Tab switching ────────────────────────────────────────────────
-function switchTab(tab) {
-  const isMap = tab === 'map';
-  $('pane-map').classList.toggle('open', isMap);
-  $('nav-sample').classList.toggle('active', !isMap);
-  $('nav-map').classList.toggle('active',    isMap);
-  if (isMap) {
-    if (sharedMarkers.length === 0) loadSharedMap();
-    else { initSharedMap(); setTimeout(() => sharedMap.invalidateSize(), 120); }
-  }
-}
+    // PWA service worker
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 
-// ── Events ────────────────────────────────────────────────
-// ── All event listeners ───────────────────────────────────────
-$('search').addEventListener('input', e => renderList(e.target.value));
-$('take-btn').addEventListener('click', takeSample);
-$('save-btn').addEventListener('click', saveFile);
-$('cloud-save-btn').addEventListener('click', saveToCloud);
-$('sign-out-btn').addEventListener('click', () => signOut(auth));
-$('auth-submit').addEventListener('click', handleAuthSubmit);
-$('tab-login').addEventListener('click', () => setAuthMode('login'));
-$('tab-register').addEventListener('click', () => setAuthMode('register'));
-$('history-toggle-btn').addEventListener('click', toggleHistory);
-$('mp-confirm').addEventListener('click', confirmLocation);
-$('mp-skip').addEventListener('click', skipLocation);
-$('edit-close').addEventListener('click', closeEditPanel);
-$('edit-save').addEventListener('click', saveEdit);
-$('ef-loc-btn').addEventListener('click', () => {
-  $('edit-panel').classList.remove('open');
-  openMapPicker(userPos, 'editing', editSampleLat, editSampleLon);
-});
-document.querySelectorAll('.cyano-btn').forEach(btn =>
-  btn.addEventListener('click', () => {
-    const v = btn.dataset.cyano;
-    setCyanoUI(v === 'yes' ? true : v === 'no' ? false : null);
-  })
-);
+    init();
+  </script>
 
-// Enter key in auth fields
-['auth-name', 'auth-email', 'auth-password'].forEach(id => {
-  $(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuthSubmit(); });
-});
-
-// Tab nav
-$('nav-sample').addEventListener('click', () => switchTab('sample'));
-$('nav-map').addEventListener('click',    () => switchTab('map'));
-$('map-load-btn').addEventListener('click', loadSharedMap);
-
-// PWA service worker
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
-
-init();
-</script>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
+
 </html>
