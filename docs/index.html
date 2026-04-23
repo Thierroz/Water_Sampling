@@ -77,9 +77,10 @@
       box-shadow: 0 24px 80px rgba(0,0,0,.5);
     }
     .auth-logo {
-      width: 64px; height: 64px;
+      width: 80px; height: 80px;
       margin: 0 auto 14px;
-      filter: drop-shadow(0 0 18px rgba(0,201,177,.55));
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(0,201,177,.45));
       animation: float 3.5s ease-in-out infinite;
     }
     .auth-title {
@@ -168,8 +169,9 @@
     #sign-out-btn:hover { color: var(--danger); }
 
     .logo {
-      width: 64px; height: 64px; margin: 0 auto 12px;
-      filter: drop-shadow(0 0 18px rgba(0,201,177,.55));
+      width: 80px; height: 80px; margin: 0 auto 12px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(0,201,177,.45));
       animation: float 3.5s ease-in-out infinite;
     }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -721,7 +723,7 @@
 <!-- ── Auth Overlay ──────────────────────────────────────────── -->
 <div id="auth-overlay">
   <div class="auth-card">
-    <img class="auth-logo" src="icon-512.png" alt="Water drop" />
+    <img class="auth-logo" src="Neosens.png" alt="Neosens logo" />
     <div class="auth-title">Water Sampler</div>
     <p class="auth-sub">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
 
@@ -825,7 +827,7 @@
         <button id="sign-out-btn" title="Sign out">✕</button>
       </div>
     </div>
-    <img class="logo" src="icon-512.png" alt="Water drop" />
+    <img class="logo" src="Neosens.png" alt="Neosens logo" />
     <h1>Water Sampler</h1>
     <p class="subtitle">Swiss hydrology · BAFU/FOEN &amp; MeteoSwiss</p>
   </header>
